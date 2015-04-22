@@ -221,7 +221,7 @@ void function() {
     defaults: {
       trigger: 'mouseenter',
       appendToBody: false,
-      animation: true,
+      animation: false,
       showDelay: 0,
       hideDelay: 0,
       target: null,
@@ -229,6 +229,8 @@ void function() {
       alignment: 'center',
       adjustLeft: 0,
       adjustTop: 0,
+
+      detachAfterHide: true,
 
       //not implement yet
       modal: false,
@@ -409,14 +411,20 @@ void function() {
 
       var dom = popover.dom;
 
-      if (!dom) {
-        dom = popover.render();
+      function attach() {
         if (popover.get('appendToBody')) {
           document.body.appendChild(dom);
         } else {
           popover.target.parentNode.appendChild(dom);
         }
+      }
+
+      if (!dom) {
+        dom = popover.render();
+        attach();
         popover.refresh();
+      } else if (!dom.parentNode) {
+        attach();
       }
 
       dom.style.display = '';
@@ -475,6 +483,10 @@ void function() {
           dom.style.display = 'none';
           dom.style.left = '';
           dom.style.top = '';
+
+          if (popover.get('detachAfterHide')) {
+            dom.parentNode && dom.parentNode.removeChild(dom);
+          }
         };
         if (popover.get('animation') === true) {
           removeClass(dom, 'in');
