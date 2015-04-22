@@ -363,7 +363,7 @@ void function() {
         }
 
         if (needReverseAlignment && outside !== 'none') {
-          var reversedAlignment = ALIGNMENT_REVERSE[placement];
+          var reversedAlignment = ALIGNMENT_REVERSE[alignment];
           tryLocate(finalPlacement, reversedAlignment);
           outside = isElementOutside(dom);
 
@@ -393,6 +393,11 @@ void function() {
         popover.hideTimer = null;
 
         return;
+      }
+
+      if (popover.showTimer) {
+        clearTimeout(popover.showTimer);
+        popover.showTimer = null;
       }
 
       var showDelay = popover.get('showDelay');
@@ -462,6 +467,11 @@ void function() {
         popover.showTimer = null;
 
         return;
+      }
+
+      if (popover.hideTimer) {
+        clearTimeout(popover.hideTimer);
+        popover.hideTimer = null;
       }
 
       var hideDelay = popover.get('hideDelay');
