@@ -322,10 +322,10 @@ void function() {
       tryLocate(placement, alignment);
 
       var outside = isElementOutside(dom);
+      var finalPlacement = placement;
+      var finalAlignment = alignment;
 
       if (outside !== 'none') {
-        var finalPlacement = placement;
-        var finalAlignment = alignment;
         var needReversePlacement = false;
         var needReverseAlignment = false;
 
@@ -371,9 +371,9 @@ void function() {
             finalAlignment = alignment;
           }
         }
-
-        popover.afterLocate(finalPlacement, finalAlignment);
       }
+
+      popover.afterLocate(finalPlacement, finalAlignment);
     },
     afterLocate: function() {},
     willShow: function() {
