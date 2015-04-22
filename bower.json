@@ -1,0 +1,13 @@
+{
+  "name": "popover.js",
+  "main": "src/popover.js",
+  "version": "0.0.1",
+  "authors": [
+    "Furybean <long.zhang@ele.me>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "demo",
+    "test"
+  ]
+}
