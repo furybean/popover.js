@@ -206,6 +206,34 @@ void function() {
     }
   };
 
+  Popover.extend = function(options) {
+    var subClass;
+    if (options.hasOwnProperty('constructor')) {
+      subClass = options.constructor;
+
+      delete options.constructor;
+    } else {
+      subClass = function() {
+        Popover.apply(this, arguments);
+      };
+    }
+
+    subClass.prototype = new Popover();
+    subClass.constructor = subClass;
+
+    var defaults = options.defaults || {};
+    subClass.prototype.defaults = extend({}, Popover.prototype.defaults, defaults);
+    delete options.defaults;
+
+    for (var prop in options) {
+      if (options.hasOwnProperty(prop)) {
+        subClass.prototype[prop] = options[prop];
+      }
+    }
+
+    return subClass;
+  };
+
   Popover.addClass = addClass;
   Popover.removeClass = removeClass;
 
