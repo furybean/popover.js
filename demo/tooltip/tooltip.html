@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>A tooltip demo</title>
+  <link href="tooltip.css" rel="stylesheet"/>
+  <script src="../../dist/popover.js"></script>
+  <script src="tooltip.js"></script>
+</head>
+<body>
+<button id="btn1">Hover on me</button>
+<button id="btn2">Unbind Target</button>
+<script>
+  window.onload = function () {
+    var btn1 = document.getElementById('btn1');
+    var tooltip = new Tooltip({
+      target: btn1,
+      content: 'A tip should place in left, auto adjust to right because of out of viewport.',
+      placement: 'left'
+    });
+
+    var btn2 = document.getElementById('btn2');
+    btn2.onclick = function() {
+      tooltip.unbindTarget(btn1);
+    }
+  };
+</script>
+</body>
+</html>

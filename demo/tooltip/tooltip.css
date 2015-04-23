@@ -1,0 +1,84 @@
+.tooltip {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    z-index: 100;
+    opacity: 0.8;
+    filter: alpha(opacity=80);
+}
+
+.tooltip.fade {
+    opacity: 0;
+    -webkit-transition: opacity 0.15s linear;
+    -o-transition: opacity 0.15s linear;
+    -moz-transition: opacity 0.15s linear;
+    transition: opacity 0.15s linear;
+}
+
+.tooltip.fade.in {
+    opacity: 1;
+}
+
+.tooltip.tooltip-placeright {
+    padding-left: 6px;
+}
+
+.tooltip.tooltip-placeright .tooltip-arrow {
+    left: 0;
+    top: 50%;
+    margin-top: -6px;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 6px solid #726F77;
+}
+
+.tooltip.tooltip-placeleft {
+    padding-right: 6px;
+}
+
+.tooltip.tooltip-placeleft .tooltip-arrow {
+    right: 0;
+    top: 50%;
+    margin-top: -6px;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 6px solid #726F77;
+}
+
+.tooltip.tooltip-placetop {
+    padding-bottom: 6px;
+}
+
+.tooltip.tooltip-placetop .tooltip-arrow {
+    bottom: 0;
+    left: 50%;
+    margin-left: -6px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #726F77;
+}
+
+.tooltip.tooltip-placebottom {
+    padding-top: 6px;
+}
+
+.tooltip.tooltip-placebottom .tooltip-arrow {
+    top: 0;
+    left: 50%;
+    margin-left: -6px;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid #726F77;
+}
+
+.tooltip-content {
+    font-size: 14px;
+    color: white;
+    padding: 5px 10px;
+    background: #726F77;
+    border-radius: 3px;
+}
+
+.tooltip-arrow {
+    position: absolute;
+}
