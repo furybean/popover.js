@@ -188,10 +188,7 @@ void function() {
     return dst;
   };
 
-  var Popover = function (target, options) {
-    if (!target) return;
-    this.target = target;
-
+  var Popover = function (options) {
     options = options || {};
     this.options = extend({}, this.defaults, options);
 
@@ -201,7 +198,9 @@ void function() {
     this.showTimer = null;
     this.hideTimer = null;
 
-    if (this.target !== null) {
+    var target = this.options.target;
+
+    if (target !== null) {
       this.bindToElement(target);
     }
   };
@@ -298,7 +297,7 @@ void function() {
         dom.parentNode.removeChild(dom);
       }
       this.dom = null;
-      this.target = null;
+      this.options = null;
     },
     bindToElement: function(target) {
       var popover = this;
@@ -333,6 +332,7 @@ void function() {
       var dom = popover.dom;
       var placement = popover.get('placement');
       var alignment = popover.get('alignment') || 'center';
+      var target = popover.get('target');
 
       var positionMap = {};
 
@@ -341,7 +341,7 @@ void function() {
         var position = positionMap[key];
 
         if (!position) {
-          position = positionElement(dom, popover.target, placement, alignment);
+          position = positionElement(dom, target, placement, alignment);
           positionMap[key] = position;
         }
 
@@ -446,7 +446,10 @@ void function() {
         if (popover.get('appendToBody')) {
           document.body.appendChild(dom);
         } else {
-          popover.target.parentNode.appendChild(dom);
+          var target = popover.get('target');
+          if (target) {
+            target.parentNode.appendChild(dom);
+          }
         }
       }
 
