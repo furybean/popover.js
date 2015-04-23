@@ -1,7 +1,7 @@
 {
   "name": "popover.js",
-  "main": "src/popover.js",
-  "version": "0.0.2",
+  "main": "dist/popover.js",
+  "version": "0.1.0",
   "authors": [
     "Furybean <long.zhang@ele.me>"
   ],
