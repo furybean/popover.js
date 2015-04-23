@@ -161,6 +161,18 @@ void function() {
     }
   })();
 
+  var unbindEvent = (function() {
+    if(document.removeEventListener) {
+      return function(element, event, handler) {
+        element.removeEventListener(event, handler);
+      };
+    } else {
+      return function(element, event, handler) {
+        element.detachEvent('on' + event, handler);
+      };
+    }
+  })();
+
   var addClass = function(el, className) {
     el.classList.add(className);
   };
@@ -193,7 +205,7 @@ void function() {
     this.options = extend({}, this.defaults, options);
 
     //inside use only
-    this.showUpdateOnVisible = false;
+    this.shouldRefreshOnVisible = false;
     this.visible = false;
     this.showTimer = null;
     this.hideTimer = null;
@@ -201,7 +213,7 @@ void function() {
     var target = this.options.target;
 
     if (target !== null) {
-      this.bindToElement(target);
+      this.bindTarget();
     }
   };
 
@@ -247,19 +259,19 @@ void function() {
   Popover.prototype = {
     defaults: {
       trigger: 'mouseenter',
-      appendToBody: false,
-      animation: false,
       showDelay: 0,
       hideDelay: 0,
       target: null,
       placement: 'top',
       alignment: 'center',
+      appendToBody: false,
+      detachAfterHide: true,
+
       adjustLeft: 0,
       adjustTop: 0,
 
-      detachAfterHide: true,
-
       //not implement yet
+      animation: false,
       modal: false,
       viewport: 'window',
       followMouse: false,
@@ -281,7 +293,7 @@ void function() {
         if (this.visible) {
           this.refresh();
         } else {
-          this.showUpdateOnVisible = true;
+          this.shouldRefreshOnVisible = true;
         }
       }
     },
@@ -298,35 +310,74 @@ void function() {
       if (dom && dom.parentNode) {
         dom.parentNode.removeChild(dom);
       }
+      var target = this.options.target;
+      if (target) {
+        this.unbindTarget();
+      }
       this.dom = null;
       this.options = null;
     },
-    bindToElement: function(target) {
+    bindTarget: function() {
       var popover = this;
+      var target = popover.get('target');
+      if (!target) return;
+
       var trigger = popover.get('trigger');
 
-      var showTip = function () {
-        popover.show();
-      };
-
-      var hideTip = function () {
-        popover.hide();
-      };
-
-      if (trigger === 'mouseenter') {
-        bindEvent(target, 'mouseenter', showTip);
-        bindEvent(target, 'mouseleave', hideTip);
-      } else if (trigger === 'focus') {
-        bindEvent(target, 'focus', showTip);
-        bindEvent(target, 'blur', hideTip);
-      } else if (trigger === 'click') {
-        bindEvent(target, 'click', function() {
+      if (trigger === 'click') {
+        var toggle = function() {
           if (popover.visible) {
             popover.hide();
           } else {
             popover.show();
           }
-        });
+        };
+        popover.toggleListener = toggle;
+
+        bindEvent(target, 'click', toggle);
+      } else {
+        var show = function () {
+          popover.show();
+        };
+        var hide = function () {
+          popover.hide();
+        };
+        popover.showListener = show;
+        popover.hideListener = hide;
+
+        if (trigger === 'mouseenter') {
+          bindEvent(target, 'mouseenter', show);
+          bindEvent(target, 'mouseleave', hide);
+        } else if (trigger === 'focus') {
+          bindEvent(target, 'focus', show);
+          bindEvent(target, 'blur', hide);
+        }
+      }
+    },
+    unbindTarget: function() {
+      var popover = this;
+      var target = popover.get('target');
+      if (!target) return;
+
+      var trigger = popover.get('trigger');
+
+      if (trigger === 'click') {
+        var toggle = popover.toggleListener;
+        if (toggle) {
+          bindEvent(target, 'click', toggle);
+        }
+      } else {
+        var show = popover.showListener;
+        var hide = popover.hideListener;
+        if (!show) return;
+
+        if (trigger === 'mouseenter') {
+          unbindEvent(target, 'mouseenter', show);
+          unbindEvent(target, 'mouseleave', hide);
+        } else if (trigger === 'focus') {
+          unbindEvent(target, 'focus', show);
+          unbindEvent(target, 'blur', hide);
+        }
       }
     },
     locate: function() {
@@ -462,9 +513,9 @@ void function() {
       } else if (!dom.parentNode) {
         attach();
 
-        if (popover.showUpdateOnVisible) {
+        if (popover.shouldRefreshOnVisible) {
           popover.refresh();
-          popover.showUpdateOnVisible = false;
+          popover.shouldRefreshOnVisible = false;
         }
       }
 
