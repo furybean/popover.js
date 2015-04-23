@@ -370,7 +370,7 @@ void function() {
           if (outside !== 'none') {
             tryLocate(finalPlacement, alignment);
           } else {
-            finalAlignment = alignment;
+            finalAlignment = reversedAlignment;
           }
         }
       }
