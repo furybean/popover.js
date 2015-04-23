@@ -173,15 +173,57 @@ void function() {
     }
   })();
 
-  var addClass = function(el, className) {
-    el.classList.add(className);
+  ''.trim || (String.prototype.trim = function(){ return this.replace(/^[\s\uFEFF]+|[\s\uFEFF]+$/g,''); });
+
+  var hasClass = function(el, cls) {
+    if (el.classList) {
+      return el.classList.contains(cls);
+    } else {
+      return (' ' + el.className + ' ').indexOf(' ' + cls + ' ') > -1;
+    }
   };
 
-  var removeClass = function(el, className) {
-    var classes = className.split(' ');
-    classes.forEach(function(className) {
-      el.classList.remove(className);
-    });
+  var addClass = function(el, cls) {
+    var classes = cls.split(' ');
+    var curClass = el.className;
+
+    for (var i = 0, j = classes.length; i < j; i++) {
+      var clsName = classes[i];
+      if (!clsName) continue;
+
+      if (el.classList) {
+        el.classList.add(clsName);
+      } else {
+        if (!hasClass(el, clsName)) {
+          curClass += ' ' + clsName;
+        }
+      }
+    }
+    if (!el.classList) {
+      el.className = curClass;
+    }
+  };
+
+  var removeClass = function(el, cls) {
+    if (!cls) return;
+    var classes = cls.split(' ');
+    var curClass = ' ' + el.className + ' ';
+
+    for (var i = 0, j = classes.length; i < j; i++) {
+      var clsName = classes[i];
+      if (!clsName) continue;
+
+      if (el.classList) {
+        el.classList.remove(className);
+      } else {
+        if (hasClass(el, clsName)) {
+          curClass = curClass.replace(' ' + clsName + ' ', ' ');
+        }
+      }
+    }
+    if (!el.classList) {
+      el.className = curClass.trim();
+    }
   };
 
   var extend = function(dst) {
@@ -245,6 +287,7 @@ void function() {
     return subClass;
   };
 
+  //TODO remove this.
   Popover.addClass = addClass;
   Popover.removeClass = removeClass;
 
@@ -510,7 +553,7 @@ void function() {
         dom = popover.render();
         attach();
         popover.refresh();
-      } else if (!dom.parentNode) {
+      } else if (!dom.parentNode || dom.parentNode.nodeType === 11) { //detached element's parentNode is a DocumentFragment in IE8
         attach();
 
         if (popover.shouldRefreshOnVisible) {
