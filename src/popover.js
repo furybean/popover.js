@@ -391,8 +391,6 @@ void function() {
       if (popover.hideTimer) {
         clearTimeout(popover.hideTimer);
         popover.hideTimer = null;
-
-        return;
       }
 
       if (popover.showTimer) {
@@ -404,8 +402,8 @@ void function() {
 
       if (Number(showDelay) > 0) {
         popover.showTimer = setTimeout(function() {
-          popover.doShow();
           popover.showTimer = null;
+          popover.doShow();
         }, showDelay);
       } else {
         popover.doShow();
@@ -465,8 +463,6 @@ void function() {
       if (popover.showTimer !== null) {
         clearTimeout(popover.showTimer);
         popover.showTimer = null;
-
-        return;
       }
 
       if (popover.hideTimer) {
@@ -478,8 +474,8 @@ void function() {
 
       if (Number(hideDelay) > 0) {
         popover.hideTimer = setTimeout(function() {
-          popover.doHide();
           popover.hideTimer = null;
+          popover.doHide();
         }, hideDelay);
       } else {
         popover.doHide();
