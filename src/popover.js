@@ -277,10 +277,12 @@ void function() {
       } else if (typeof prop === 'string') {
         this.options[prop] = value;
       }
-      if (this.visible) {
-        this.refresh();
-      } else {
-        this.showUpdateOnVisible = true;
+      if (this.dom) {
+        if (this.visible) {
+          this.refresh();
+        } else {
+          this.showUpdateOnVisible = true;
+        }
       }
     },
     get: function(prop) {
@@ -459,14 +461,14 @@ void function() {
         popover.refresh();
       } else if (!dom.parentNode) {
         attach();
+
+        if (popover.showUpdateOnVisible) {
+          popover.refresh();
+          popover.showUpdateOnVisible = false;
+        }
       }
 
       dom.style.display = '';
-
-      if (popover.showUpdateOnVisible) {
-        popover.refresh();
-        popover.showUpdateOnVisible = false;
-      }
 
       dom.style.visibility = 'hidden';
       dom.style.display = '';
