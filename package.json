@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "browserify": "^9.0.8",
+    "gulp": "^3.8.11",
+    "vinyl-transform": "^1.0.0",
+    "vinyl-source-stream": "*"
+  }
+}
