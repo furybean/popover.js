@@ -28,3 +28,4 @@ node_modules
 
 # IDE
 .idea
+demo/**/*.bundle.js

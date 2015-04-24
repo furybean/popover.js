@@ -1,11 +1,14 @@
 var PLACE_CLASSES = 'tooltip-placetop tooltip-placebottom tooltip-placeleft tooltip-placeright';
 
+var Popover = require('../../src/popover.js');
+var DomUtil = require('../../src/dom-util.js');
+
 var Tooltip = Popover.extend({
   defaults: {
     content: null,
     enable: true,
     showDelay: 200,
-    animation: true
+    animation: 'fade'
   },
   render: function() {
     var dom = document.createElement('div');
@@ -37,9 +40,9 @@ var Tooltip = Popover.extend({
     var popover = this;
 
     var dom = popover.dom;
-    Popover.removeClass(dom, PLACE_CLASSES);
+    DomUtil.removeClass(dom, PLACE_CLASSES);
 
-    Popover.addClass(dom, 'tooltip-place' + placement);
+    DomUtil.addClass(dom, 'tooltip-place' + placement);
   },
   refresh: function() {
     var tooltip = this;
@@ -48,9 +51,10 @@ var Tooltip = Popover.extend({
     tooltip.contentDom.innerHTML = tooltip.get('content');
 
     var placement = tooltip.get('placement');
-    Popover.addClass(dom, 'tooltip-place' + placement);
-    if (tooltip.get('animation') === true) {
-      Popover.addClass(dom, 'fade');
-    }
+    DomUtil.addClass(dom, 'tooltip-place' + placement);
   }
 });
+
+window['Tooltip'] = Tooltip;
+
+module.exports = Tooltip;

@@ -1,6 +1,4 @@
 var domUtil = require('./dom-util');
-var addClass = domUtil.addClass;
-var removeClass = domUtil.removeClass;
 var bindEvent = domUtil.bindEvent;
 var unbindEvent = domUtil.unbindEvent;
 var positionElement = domUtil.positionElement;
@@ -69,9 +67,23 @@ Popover.extend = function(options) {
   return subClass;
 };
 
-//TODO remove this.
-Popover.addClass = addClass;
-Popover.removeClass = removeClass;
+var animations = {};
+
+Popover.registerAnimation = function(name, config) {
+  animations[name] = config;
+};
+
+Popover.getAnimation = function(name) {
+  return animations[name];
+};
+
+var supportAnimations = require('./animation');
+
+for (var prop in supportAnimations) {
+  if (supportAnimations.hasOwnProperty(prop)) {
+    Popover.registerAnimation(prop, supportAnimations[prop]);
+  }
+}
 
 var PLACEMENT_REVERSE = {
   top: 'bottom', bottom: 'top', left: 'right', right: 'left'
@@ -95,8 +107,11 @@ Popover.prototype = {
     adjustLeft: 0,
     adjustTop: 0,
 
-    //not implement yet
     animation: false,
+    showAnimation: undefined,
+    hideAnimation: undefined,
+
+    //not implement yet
     modal: false,
     viewport: 'window',
     followMouse: false,
@@ -354,13 +369,19 @@ Popover.prototype = {
 
     popover.locate();
 
-    dom.style.visibility = '';
-
-    if (transition.support && popover.get('animation') === true) {
-      setTimeout(function() {
-        addClass(dom, 'in');
-      }, 0);
+    var animation = popover.get('animation');
+    var showAnimation = popover.get('showAnimation');
+    if (showAnimation === undefined) {
+      showAnimation = animation;
     }
+    if (transition.support && showAnimation !== false) {
+      var config = Popover.getAnimation(showAnimation);
+      if (config.show) {
+        config.show.apply(null, [popover]);
+      }
+    }
+
+    dom.style.visibility = '';
   },
   willHide: function() {
     return true;
@@ -400,22 +421,30 @@ Popover.prototype = {
 
     var dom = popover.dom;
     if (dom) {
-      var afterHide = function () {
-        dom.style.display = 'none';
-        dom.style.left = '';
-        dom.style.top = '';
 
-        if (popover.get('detachAfterHide')) {
-          dom.parentNode && dom.parentNode.removeChild(dom);
-        }
-      };
-      if (transition.support && popover.get('animation') === true) {
-        removeClass(dom, 'in');
-
-        domUtil.bindOnce(dom, transition.event, afterHide);
-      } else {
-        afterHide();
+      var animation = popover.get('animation');
+      var hideAnimation = popover.get('hideAnimation');
+      if (hideAnimation === undefined) {
+        hideAnimation = animation;
       }
+      if (transition.support && hideAnimation !== false) {
+        var config = Popover.getAnimation(hideAnimation);
+        if (config.hide) {
+          config.hide.apply(null, [popover]);
+        }
+      } else {
+        popover.afterHide();
+      }
+    }
+  },
+  afterHide: function() {
+    var dom = this.dom;
+    dom.style.display = 'none';
+    dom.style.left = '';
+    dom.style.top = '';
+
+    if (this.get('detachAfterHide')) {
+      dom.parentNode && dom.parentNode.removeChild(dom);
     }
   }
 };

@@ -15,7 +15,58 @@ if (typeof define === 'function' && define.amd) { // For AMD
   Number(document.documentMode) < 9 && window.execScript('var ' + NAME);
   window[NAME] = Popover;
 }
-},{"./popover":3}],2:[function(require,module,exports){
+},{"./popover":4}],2:[function(require,module,exports){
+var domUtil = require('./dom-util');
+var transition = require('./transition');
+
+module.exports = {
+  'fade': {
+    duration: 200,
+    show: function(popover) {
+      domUtil.addClass(popover.dom, 'fade-in');
+      popover.dom.style.visibility = '';
+      setTimeout(function() {
+        domUtil.bindOnce(popover.dom, transition.event, function() {
+          domUtil.removeClass(popover.dom, 'fade-in in');
+        });
+        domUtil.addClass(popover.dom, 'in');
+      }, 10);
+    },
+    hide: function(popover) {
+      domUtil.addClass(popover.dom, 'fade-out');
+      setTimeout(function() {
+        domUtil.bindOnce(popover.dom, transition.event, function() {
+          popover.afterHide();
+          domUtil.removeClass(popover.dom, 'fade-out out');
+        });
+        domUtil.addClass(popover.dom, 'out');
+      }, 10);
+    }
+  },
+  'pop': {
+    duration: 200,
+    show: function(popover) {
+      domUtil.addClass(popover.dom, 'pop-in');
+      setTimeout(function() {
+        domUtil.bindOnce(popover.dom, transition.event, function() {
+          domUtil.removeClass(popover.dom, 'pop-in in');
+        });
+        domUtil.addClass(popover.dom, 'in');
+      }, 10);
+    },
+    hide: function(popover) {
+      domUtil.addClass(popover.dom, 'pop-out');
+      setTimeout(function() {
+        domUtil.bindOnce(popover.dom, transition.event, function() {
+          popover.afterHide();
+          domUtil.removeClass(popover.dom, 'pop-out out');
+        });
+        domUtil.addClass(popover.dom, 'out');
+      }, 10);
+    }
+  }
+};
+},{"./dom-util":3,"./transition":5}],3:[function(require,module,exports){
 var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
 var MOZ_HACK_REGEXP = /^moz([A-Z])/;
 
@@ -259,10 +310,8 @@ module.exports = {
   positionElement: positionElement,
   isElementOutside: isElementOutside
 };
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 var domUtil = require('./dom-util');
-var addClass = domUtil.addClass;
-var removeClass = domUtil.removeClass;
 var bindEvent = domUtil.bindEvent;
 var unbindEvent = domUtil.unbindEvent;
 var positionElement = domUtil.positionElement;
@@ -331,9 +380,23 @@ Popover.extend = function(options) {
   return subClass;
 };
 
-//TODO remove this.
-Popover.addClass = addClass;
-Popover.removeClass = removeClass;
+var animations = {};
+
+Popover.registerAnimation = function(name, config) {
+  animations[name] = config;
+};
+
+Popover.getAnimation = function(name) {
+  return animations[name];
+};
+
+var supportAnimations = require('./animation');
+
+for (var prop in supportAnimations) {
+  if (supportAnimations.hasOwnProperty(prop)) {
+    Popover.registerAnimation(prop, supportAnimations[prop]);
+  }
+}
 
 var PLACEMENT_REVERSE = {
   top: 'bottom', bottom: 'top', left: 'right', right: 'left'
@@ -357,8 +420,11 @@ Popover.prototype = {
     adjustLeft: 0,
     adjustTop: 0,
 
-    //not implement yet
     animation: false,
+    showAnimation: undefined,
+    hideAnimation: undefined,
+
+    //not implement yet
     modal: false,
     viewport: 'window',
     followMouse: false,
@@ -616,13 +682,19 @@ Popover.prototype = {
 
     popover.locate();
 
-    dom.style.visibility = '';
-
-    if (transition.support && popover.get('animation') === true) {
-      setTimeout(function() {
-        addClass(dom, 'in');
-      }, 0);
+    var animation = popover.get('animation');
+    var showAnimation = popover.get('showAnimation');
+    if (showAnimation === undefined) {
+      showAnimation = animation;
     }
+    if (transition.support && showAnimation !== false) {
+      var config = Popover.getAnimation(showAnimation);
+      if (config.show) {
+        config.show.apply(null, [popover]);
+      }
+    }
+
+    dom.style.visibility = '';
   },
   willHide: function() {
     return true;
@@ -662,24 +734,30 @@ Popover.prototype = {
 
     var dom = popover.dom;
     if (dom) {
-      var afterHide = function () {
-        dom.style.display = 'none';
-        dom.style.left = '';
-        dom.style.top = '';
 
-        if (popover.get('detachAfterHide')) {
-          dom.parentNode && dom.parentNode.removeChild(dom);
-        }
-      };
-      if (transition.support && popover.get('animation') === true) {
-        removeClass(dom, 'in');
-
-        domUtil.bindOnce(dom, transition.event, afterHide);
-
-        //setTimeout(afterHide, 200);
-      } else {
-        afterHide();
+      var animation = popover.get('animation');
+      var hideAnimation = popover.get('hideAnimation');
+      if (hideAnimation === undefined) {
+        hideAnimation = animation;
       }
+      if (transition.support && hideAnimation !== false) {
+        var config = Popover.getAnimation(hideAnimation);
+        if (config.hide) {
+          config.hide.apply(null, [popover]);
+        }
+      } else {
+        popover.afterHide();
+      }
+    }
+  },
+  afterHide: function() {
+    var dom = this.dom;
+    dom.style.display = 'none';
+    dom.style.left = '';
+    dom.style.top = '';
+
+    if (this.get('detachAfterHide')) {
+      dom.parentNode && dom.parentNode.removeChild(dom);
     }
   }
 };
@@ -687,7 +765,7 @@ Popover.prototype = {
 Popover.prototype.constructor = Popover;
 
 module.exports = Popover;
-},{"./dom-util":2,"./transition":4}],4:[function(require,module,exports){
+},{"./animation":2,"./dom-util":3,"./transition":5}],5:[function(require,module,exports){
 var prefixMap = {
   'mozTransition': {
     prefix: '-moz-',
@@ -731,8 +809,6 @@ if (result === undefined) {
 } else {
   result.support = true;
 }
-
-console.log(result);
 
 module.exports = result;
 },{}]},{},[1]);

@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <title>A tooltip demo</title>
   <link href="tooltip.css" rel="stylesheet"/>
-  <script src="../../dist/popover.js"></script>
-  <script src="tooltip.js"></script>
+  <script src="tooltip.bundle.js"></script>
 </head>
 <body>
 <button id="btn1">Hover on me</button>
@@ -16,6 +15,8 @@
     var btn1 = document.getElementById('btn1');
     tooltip = new Tooltip({
       target: btn1,
+      detachAfterHide: false,
+      animation: 'pop',
       content: 'A tip should place in left, auto adjust to right because of out of viewport.',
       placement: 'left'
     });
