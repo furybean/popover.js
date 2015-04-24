@@ -1,11 +1,6 @@
 var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
 var MOZ_HACK_REGEXP = /^moz([A-Z])/;
 
-/**
- * Converts snake_case to camelCase.
- * Also there is special case for Moz prefix starting with upper case letter.
- * @param name Name to normalize
- */
 function camelCase(name) {
   return name.
     replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
@@ -172,6 +167,16 @@ var unbindEvent = (function() {
   }
 })();
 
+var bindOnce = function(el, event, fn) {
+  var listener = function() {
+    if (fn) {
+      fn.apply(this, arguments);
+    }
+    unbindEvent(el, event, listener);
+  };
+  bindEvent(el, event, listener);
+};
+
 ''.trim || (String.prototype.trim = function(){ return this.replace(/^[\s\uFEFF]+|[\s\uFEFF]+$/g,''); });
 
 var hasClass = function(el, cls) {
@@ -228,9 +233,11 @@ var removeClass = function(el, cls) {
 module.exports = {
   hasClass: hasClass,
   addClass: addClass,
+  camelCase: camelCase,
   removeClass: removeClass,
   bindEvent: bindEvent,
   unbindEvent: unbindEvent,
+  bindOnce: bindOnce,
   positionElement: positionElement,
   isElementOutside: isElementOutside
 };

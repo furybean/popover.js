@@ -11,9 +11,10 @@
 <button id="btn1">Hover on me</button>
 <button id="btn2">Unbind Target</button>
 <script>
+  var tooltip;
   window.onload = function () {
     var btn1 = document.getElementById('btn1');
-    var tooltip = new Tooltip({
+    tooltip = new Tooltip({
       target: btn1,
       content: 'A tip should place in left, auto adjust to right because of out of viewport.',
       placement: 'left'

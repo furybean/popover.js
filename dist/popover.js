@@ -12,17 +12,13 @@ if (typeof define === 'function' && define.amd) { // For AMD
     return Popover;
   });
 } else {
+  Number(document.documentMode) < 9 && window.execScript('var ' + NAME);
   window[NAME] = Popover;
 }
 },{"./popover":3}],2:[function(require,module,exports){
 var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
 var MOZ_HACK_REGEXP = /^moz([A-Z])/;
 
-/**
- * Converts snake_case to camelCase.
- * Also there is special case for Moz prefix starting with upper case letter.
- * @param name Name to normalize
- */
 function camelCase(name) {
   return name.
     replace(SPECIAL_CHARS_REGEXP, function(_, separator, letter, offset) {
@@ -189,6 +185,16 @@ var unbindEvent = (function() {
   }
 })();
 
+var bindOnce = function(el, event, fn) {
+  var listener = function() {
+    if (fn) {
+      fn.apply(this, arguments);
+    }
+    unbindEvent(el, event, listener);
+  };
+  bindEvent(el, event, listener);
+};
+
 ''.trim || (String.prototype.trim = function(){ return this.replace(/^[\s\uFEFF]+|[\s\uFEFF]+$/g,''); });
 
 var hasClass = function(el, cls) {
@@ -245,9 +251,11 @@ var removeClass = function(el, cls) {
 module.exports = {
   hasClass: hasClass,
   addClass: addClass,
+  camelCase: camelCase,
   removeClass: removeClass,
   bindEvent: bindEvent,
   unbindEvent: unbindEvent,
+  bindOnce: bindOnce,
   positionElement: positionElement,
   isElementOutside: isElementOutside
 };
@@ -259,6 +267,8 @@ var bindEvent = domUtil.bindEvent;
 var unbindEvent = domUtil.unbindEvent;
 var positionElement = domUtil.positionElement;
 var isElementOutside = domUtil.isElementOutside;
+
+var transition = require('./transition');
 
 var extend = function(dst) {
   for (var i = 1, j = arguments.length; i < j; i++) {
@@ -535,7 +545,8 @@ Popover.prototype = {
 
     popover.afterLocate(finalPlacement, finalAlignment);
   },
-  afterLocate: function() {},
+  afterLocate: function() {
+  },
   willShow: function() {
     return true;
   },
@@ -544,12 +555,12 @@ Popover.prototype = {
 
     if (!popover.willShow()) return;
 
-    popover.visible = true;
-
     if (popover.hideTimer) {
       clearTimeout(popover.hideTimer);
       popover.hideTimer = null;
     }
+
+    if (popover.visible) return;
 
     if (popover.showTimer) {
       clearTimeout(popover.showTimer);
@@ -569,6 +580,8 @@ Popover.prototype = {
   },
   doShow: function() {
     var popover = this;
+
+    popover.visible = true;
 
     var dom = popover.dom;
 
@@ -605,7 +618,7 @@ Popover.prototype = {
 
     dom.style.visibility = '';
 
-    if (popover.get('animation') === true) {
+    if (transition.support && popover.get('animation') === true) {
       setTimeout(function() {
         addClass(dom, 'in');
       }, 0);
@@ -619,12 +632,12 @@ Popover.prototype = {
 
     if (!popover.willHide()) return;
 
-    popover.visible = false;
-
     if (popover.showTimer !== null) {
       clearTimeout(popover.showTimer);
       popover.showTimer = null;
     }
+
+    if (!popover.visible) return;
 
     if (popover.hideTimer) {
       clearTimeout(popover.hideTimer);
@@ -644,6 +657,9 @@ Popover.prototype = {
   },
   doHide: function() {
     var popover = this;
+
+    popover.visible = false;
+
     var dom = popover.dom;
     if (dom) {
       var afterHide = function () {
@@ -655,10 +671,12 @@ Popover.prototype = {
           dom.parentNode && dom.parentNode.removeChild(dom);
         }
       };
-      if (popover.get('animation') === true) {
+      if (transition.support && popover.get('animation') === true) {
         removeClass(dom, 'in');
 
-        setTimeout(afterHide, 200);
+        domUtil.bindOnce(dom, transition.event, afterHide);
+
+        //setTimeout(afterHide, 200);
       } else {
         afterHide();
       }
@@ -669,4 +687,52 @@ Popover.prototype = {
 Popover.prototype.constructor = Popover;
 
 module.exports = Popover;
-},{"./dom-util":2}]},{},[1]);
+},{"./dom-util":2,"./transition":4}],4:[function(require,module,exports){
+var prefixMap = {
+  'mozTransition': {
+    prefix: '-moz-',
+    event: 'transitionend'
+  },
+  'oTransition': {
+    prefix:'-o-',
+    event: 'oTransitionend'
+  },
+  'webkitTransition': {
+    prefix: '-webkit-',
+    event: 'webkitTransitionend'
+  }
+};
+
+var testEl = document.body ? document.body : document.createElement('div');
+
+var result;
+
+if ('transition' in testEl.style) {
+  result = {
+    prefix: '',
+    event: 'transitionend'
+  };
+} else {
+  for (var prop in prefixMap) {
+    if (prefixMap.hasOwnProperty(prop)) {
+      if (prop in testEl.style) {
+        result = prefixMap[prop];
+
+        break;
+      }
+    }
+  }
+}
+
+if (result === undefined) {
+  result = {
+    support: false
+  }
+} else {
+  result.support = true;
+}
+
+console.log(result);
+
+module.exports = result;
+},{}]},{},[1]);

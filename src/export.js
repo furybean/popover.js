@@ -11,5 +11,6 @@ if (typeof define === 'function' && define.amd) { // For AMD
     return Popover;
   });
 } else {
+  Number(document.documentMode) < 9 && window.execScript('var ' + NAME);
   window[NAME] = Popover;
 }

@@ -6,6 +6,8 @@ var unbindEvent = domUtil.unbindEvent;
 var positionElement = domUtil.positionElement;
 var isElementOutside = domUtil.isElementOutside;
 
+var transition = require('./transition');
+
 var extend = function(dst) {
   for (var i = 1, j = arguments.length; i < j; i++) {
     var src = arguments[i];
@@ -281,7 +283,8 @@ Popover.prototype = {
 
     popover.afterLocate(finalPlacement, finalAlignment);
   },
-  afterLocate: function() {},
+  afterLocate: function() {
+  },
   willShow: function() {
     return true;
   },
@@ -290,12 +293,12 @@ Popover.prototype = {
 
     if (!popover.willShow()) return;
 
-    popover.visible = true;
-
     if (popover.hideTimer) {
       clearTimeout(popover.hideTimer);
       popover.hideTimer = null;
     }
+
+    if (popover.visible) return;
 
     if (popover.showTimer) {
       clearTimeout(popover.showTimer);
@@ -315,6 +318,8 @@ Popover.prototype = {
   },
   doShow: function() {
     var popover = this;
+
+    popover.visible = true;
 
     var dom = popover.dom;
 
@@ -351,7 +356,7 @@ Popover.prototype = {
 
     dom.style.visibility = '';
 
-    if (popover.get('animation') === true) {
+    if (transition.support && popover.get('animation') === true) {
       setTimeout(function() {
         addClass(dom, 'in');
       }, 0);
@@ -365,12 +370,12 @@ Popover.prototype = {
 
     if (!popover.willHide()) return;
 
-    popover.visible = false;
-
     if (popover.showTimer !== null) {
       clearTimeout(popover.showTimer);
       popover.showTimer = null;
     }
+
+    if (!popover.visible) return;
 
     if (popover.hideTimer) {
       clearTimeout(popover.hideTimer);
@@ -390,6 +395,9 @@ Popover.prototype = {
   },
   doHide: function() {
     var popover = this;
+
+    popover.visible = false;
+
     var dom = popover.dom;
     if (dom) {
       var afterHide = function () {
@@ -401,10 +409,10 @@ Popover.prototype = {
           dom.parentNode && dom.parentNode.removeChild(dom);
         }
       };
-      if (popover.get('animation') === true) {
+      if (transition.support && popover.get('animation') === true) {
         removeClass(dom, 'in');
 
-        setTimeout(afterHide, 200);
+        domUtil.bindOnce(dom, transition.event, afterHide);
       } else {
         afterHide();
       }
