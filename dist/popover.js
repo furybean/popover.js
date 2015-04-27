@@ -66,7 +66,7 @@ module.exports = {
     }
   }
 };
-},{"./dom-util":3,"./transition":5}],3:[function(require,module,exports){
+},{"./dom-util":3,"./transition":6}],3:[function(require,module,exports){
 var SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
 var MOZ_HACK_REGEXP = /^moz([A-Z])/;
 
@@ -314,161 +314,30 @@ module.exports = {
 var domUtil = require('./dom-util');
 var bindEvent = domUtil.bindEvent;
 var unbindEvent = domUtil.unbindEvent;
-var positionElement = domUtil.positionElement;
-var isElementOutside = domUtil.isElementOutside;
 
-var transition = require('./transition');
+var Popup = require('./popup');
 
-var extend = function(dst) {
-  for (var i = 1, j = arguments.length; i < j; i++) {
-    var src = arguments[i];
-    for (var prop in src) {
-      if (src.hasOwnProperty(prop)) {
-        var value = src[prop];
-        if (value !== undefined) {
-          dst[prop] = value;
-        }
-      }
-    }
-  }
-
-  return dst;
-};
-
-var Popover = function (options) {
-  options = options || {};
-  this.options = extend({}, this.defaults, options);
-
-  //inside use only
-  this.shouldRefreshOnVisible = false;
-  this.visible = false;
-  this.showTimer = null;
-  this.hideTimer = null;
-
-  var target = this.options.target;
-
-  if (target !== null) {
-    this.bindTarget();
-  }
-};
-
-Popover.extend = function(options) {
-  var subClass;
-  if (options.hasOwnProperty('constructor')) {
-    subClass = options.constructor;
-
-    delete options.constructor;
-  } else {
-    subClass = function() {
-      Popover.apply(this, arguments);
-    };
-  }
-
-  subClass.prototype = new Popover();
-  subClass.constructor = subClass;
-
-  var defaults = options.defaults || {};
-  subClass.prototype.defaults = extend({}, Popover.prototype.defaults, defaults);
-  delete options.defaults;
-
-  for (var prop in options) {
-    if (options.hasOwnProperty(prop)) {
-      subClass.prototype[prop] = options[prop];
-    }
-  }
-
-  return subClass;
-};
-
-var animations = {};
-
-Popover.registerAnimation = function(name, config) {
-  animations[name] = config;
-};
-
-Popover.getAnimation = function(name) {
-  return animations[name];
-};
-
-var supportAnimations = require('./animation');
-
-for (var prop in supportAnimations) {
-  if (supportAnimations.hasOwnProperty(prop)) {
-    Popover.registerAnimation(prop, supportAnimations[prop]);
-  }
-}
-
-var PLACEMENT_REVERSE = {
-  top: 'bottom', bottom: 'top', left: 'right', right: 'left'
-};
-
-var ALIGNMENT_REVERSE = {
-  start: 'end', end: 'start', center: 'center'
-};
-
-Popover.prototype = {
+var Popover = Popup.extend({
   defaults: {
     trigger: 'mouseenter',
-    showDelay: 0,
-    hideDelay: 0,
-    target: null,
-    placement: 'top',
-    alignment: 'center',
-    appendToBody: false,
-    detachAfterHide: true,
-
-    adjustLeft: 0,
-    adjustTop: 0,
-
-    animation: false,
-    showAnimation: undefined,
-    hideAnimation: undefined,
 
     //not implement yet
-    modal: false,
-    viewport: 'window',
-    followMouse: false,
-    updatePositionOnResize: false,
-    updatePositionOnScroll: false
+    followMouse: false
   },
-  set: function(prop, value) {
-    if (prop !== null && typeof prop === 'object') {
-      var props = prop;
-      for (var p in props) {
-        if (props.hasOwnProperty(p)) {
-          this.set(p, props[p]);
-        }
-      }
-    } else if (typeof prop === 'string') {
-      this.options[prop] = value;
+  constructor: function() {
+    Popup.apply(this, arguments);
+    var target = this.options.target;
+
+    if (target !== null) {
+      this.bindTarget();
     }
-    if (this.dom) {
-      if (this.visible) {
-        this.refresh();
-      } else {
-        this.shouldRefreshOnVisible = true;
-      }
-    }
-  },
-  get: function(prop) {
-    return this.options[prop];
-  },
-  render: function() {
-    return document.createElement('div');
-  },
-  refresh: function() {
   },
   destroy: function() {
-    var dom = this.dom;
-    if (dom && dom.parentNode) {
-      dom.parentNode.removeChild(dom);
-    }
     var target = this.options.target;
     if (target) {
       this.unbindTarget();
     }
-    this.dom = null;
-    this.options = null;
+    Popup.prototype.destroy.apply(this, arguments);
   },
   bindTarget: function() {
     var popover = this;
@@ -532,6 +401,161 @@ Popover.prototype = {
         unbindEvent(target, 'blur', hide);
       }
     }
+  }
+});
+
+module.exports = Popover;
+},{"./dom-util":3,"./popup":5}],5:[function(require,module,exports){
+var domUtil = require('./dom-util');
+var positionElement = domUtil.positionElement;
+var isElementOutside = domUtil.isElementOutside;
+
+var transition = require('./transition');
+
+var extend = function(dst) {
+  for (var i = 1, j = arguments.length; i < j; i++) {
+    var src = arguments[i];
+    for (var prop in src) {
+      if (src.hasOwnProperty(prop)) {
+        var value = src[prop];
+        if (value !== undefined) {
+          dst[prop] = value;
+        }
+      }
+    }
+  }
+
+  return dst;
+};
+
+var Popup = function (options) {
+  options = options || {};
+  this.options = extend({}, this.defaults, options);
+
+  //inside use only
+  this.shouldRefreshOnVisible = false;
+  this.visible = false;
+  this.showTimer = null;
+  this.hideTimer = null;
+};
+
+var getExtendFn = function(parentClass) {
+  return function(options) {
+    var subClass;
+    if (options.hasOwnProperty('constructor')) {
+      subClass = options.constructor;
+
+      delete options.constructor;
+    } else {
+      subClass = function() {
+        parentClass.apply(this, arguments);
+      };
+    }
+
+    subClass.prototype = new parentClass();
+    subClass.constructor = subClass;
+    subClass.extend = getExtendFn(subClass);
+
+    var defaults = options.defaults || {};
+    subClass.prototype.defaults = extend({}, parentClass.prototype.defaults, defaults);
+    delete options.defaults;
+
+    for (var prop in options) {
+      if (options.hasOwnProperty(prop)) {
+        subClass.prototype[prop] = options[prop];
+      }
+    }
+
+    return subClass;
+  }
+};
+
+Popup.extend = getExtendFn(Popup);
+
+var animations = {};
+
+Popup.registerAnimation = function(name, config) {
+  animations[name] = config;
+};
+
+Popup.getAnimation = function(name) {
+  return animations[name];
+};
+
+var supportAnimations = require('./animation');
+
+for (var prop in supportAnimations) {
+  if (supportAnimations.hasOwnProperty(prop)) {
+    Popup.registerAnimation(prop, supportAnimations[prop]);
+  }
+}
+
+var PLACEMENT_REVERSE = {
+  top: 'bottom', bottom: 'top', left: 'right', right: 'left'
+};
+
+var ALIGNMENT_REVERSE = {
+  start: 'end', end: 'start', center: 'center'
+};
+
+Popup.prototype = {
+  defaults: {
+    showDelay: 0,
+    hideDelay: 0,
+    placement: 'top',
+    alignment: 'center',
+    appendToBody: false,
+    detachAfterHide: true,
+
+    target: null,
+
+    adjustLeft: 0,
+    adjustTop: 0,
+
+    animation: false,
+    showAnimation: undefined,
+    hideAnimation: undefined,
+
+    //not implement yet
+    modal: false,
+    viewport: 'window',
+    updatePositionOnResize: false,
+    updatePositionOnScroll: false
+  },
+  set: function(prop, value) {
+    if (prop !== null && typeof prop === 'object') {
+      var props = prop;
+      for (var p in props) {
+        if (props.hasOwnProperty(p)) {
+          this.set(p, props[p]);
+        }
+      }
+    } else if (typeof prop === 'string') {
+      this.options[prop] = value;
+    }
+    if (this.dom) {
+      if (this.visible) {
+        this.refresh();
+      } else {
+        this.shouldRefreshOnVisible = true;
+      }
+    }
+  },
+  get: function(prop) {
+    return this.options[prop];
+  },
+  render: function() {
+    return document.createElement('div');
+  },
+  refresh: function() {
+  },
+  destroy: function() {
+    var dom = this.dom;
+    if (dom && dom.parentNode) {
+      dom.parentNode.removeChild(dom);
+    }
+    this.dom = null;
+    this.options = null;
   },
   locate: function() {
     var popover = this;
@@ -688,7 +712,7 @@ Popover.prototype = {
       showAnimation = animation;
     }
     if (transition.support && showAnimation !== false) {
-      var config = Popover.getAnimation(showAnimation);
+      var config = Popup.getAnimation(showAnimation);
       if (config.show) {
         config.show.apply(null, [popover]);
       }
@@ -741,7 +765,7 @@ Popover.prototype = {
         hideAnimation = animation;
       }
       if (transition.support && hideAnimation !== false) {
-        var config = Popover.getAnimation(hideAnimation);
+        var config = Popup.getAnimation(hideAnimation);
         if (config.hide) {
           config.hide.apply(null, [popover]);
         }
@@ -762,10 +786,10 @@ Popover.prototype = {
   }
 };
 
-Popover.prototype.constructor = Popover;
+Popup.prototype.constructor = Popup;
 
-module.exports = Popover;
-},{"./animation":2,"./dom-util":3,"./transition":5}],5:[function(require,module,exports){
+module.exports = Popup;
+},{"./animation":2,"./dom-util":3,"./transition":6}],6:[function(require,module,exports){
 var prefixMap = {
   'mozTransition': {
     prefix: '-moz-',
