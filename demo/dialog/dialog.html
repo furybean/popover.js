@@ -10,15 +10,53 @@
       background: white;
       border: 1px solid gray;
     }
+
+    .pop-in {
+      -webkit-transform: scale(0.8);
+      -o-transform: scale(0.8);
+      transform: scale(0.8);
+    }
+
+    .pop-in.in {
+      -webkit-transform: none;
+      -o-transform: none;
+      transform: none;
+      transition: transform 0.15s cubic-bezier(0.3, 0, 0, 1.5);
+    }
+
+    .pop-out {
+      -webkit-transform: none;
+      -o-transform: none;
+      transform: none;
+    }
+
+    .pop-out.out {
+      -webkit-transform: scale(0.8);
+      -o-transform: scale(0.8);
+      transform: scale(0.8);
+      transition: transform 0.15s cubic-bezier(0.3, 0, 0, 1.5);
+    }
   </style>
 </head>
 <body>
 <button id="btn1">show dialog</button>
 <script>
-  var dialog;
+  var dialog, dialog2, dialog3;
   window.onload = function () {
     var btn1 = document.getElementById('btn1');
     dialog = new Dialog({
+      target: "center",
+      detachAfterHide: false,
+      animation: 'pop'
+    });
+
+    dialog2 = new Dialog({
+      target: "center",
+      detachAfterHide: false,
+      animation: 'pop'
+    });
+
+    dialog3 = new Dialog({
       target: "center",
       detachAfterHide: false,
       animation: 'pop'

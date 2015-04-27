@@ -315,42 +315,72 @@ var getModal = function() {
   var modalDom = ModalManager.modalDom;
   if (!modalDom) {
     modalDom = document.createElement('div');
+    ModalManager.modalDom = modalDom;
   }
-  var style = {
-    position: 'fixed',
-    left: 0,
-    top: 0,
-    width: '100%',
-    height: '100%',
-    opacity: '0.5',
-    background: '#000',
-    display: 'none'
-  };
-
-  for (var name in style) {
-    if (style.hasOwnProperty(name)) {
-      modalDom.style[name] = style[name];
-    }
-  }
-
-  document.body.appendChild(modalDom);
 
   return modalDom;
 };
 
 var ModalManager = {
-  show: function(options) {
+  stack: [],
+  show: function(id, zIndex) {
+    if (!id || zIndex === undefined) return;
+
     var modalDom = getModal();
-    if (options.zIndex) {
-      modalDom.style.zIndex = options.zIndex;
+
+    var style = {
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      width: '100%',
+      height: '100%',
+      opacity: '0.5',
+      background: '#000',
+      display: 'none'
+    };
+
+    for (var name in style) {
+      if (style.hasOwnProperty(name)) {
+        modalDom.style[name] = style[name];
+      }
+    }
+
+    if (!modalDom.parentNode)
+      document.body.appendChild(modalDom);
+
+    if (zIndex) {
+      modalDom.style.zIndex = zIndex;
     }
     modalDom.style.display = '';
-  },
-  hide: function() {
-    var modalDom = getModal();
-    modalDom.style.display = 'none';
 
-    modalDom.parentNode.removeChild(modalDom);
+    this.stack.push({ id: id, zIndex: zIndex });
+  },
+  hide: function(id) {
+    var stack = this.stack;
+    var modalDom = getModal();
+
+    if (stack.length > 0) {
+      var topItem = stack[stack.length - 1];
+      if (topItem.id === id) {
+        stack.pop();
+        if (stack.length > 0) {
+          modalDom.style.zIndex = stack[stack.length - 1].zIndex;
+        }
+      } else {
+        for (var i = stack.length - 1; i >= 0; i--) {
+          if (stack[i].id === id) {
+            stack.splice(i, 1);
+            break;
+          }
+        }
+      }
+    }
+
+    if (stack.length === 0) {
+      modalDom.style.display = 'none';
+
+      modalDom.parentNode.removeChild(modalDom);
+    }
   }
 };
 
@@ -475,11 +505,14 @@ var extend = function(dst) {
 
 var modalManager = require('./modal-manager');
 
+var seed = 1;
+
 var Popup = function (options) {
   options = options || {};
   this.options = extend({}, this.defaults, options);
 
   //inside use only
+  this.$id = '$popup_' + seed++;
   this.shouldRefreshOnVisible = false;
   this.visible = false;
   this.showTimer = null;
@@ -699,13 +732,12 @@ Popup.prototype = {
 
       popover.afterLocate(finalPlacement, finalAlignment);
     } else if (target instanceof Array && target.length === 2) {
-      dom.style.left = target[0] + 'px';
-      dom.style.top = target[1] + 'px';
+      dom.style.left = target[0] + adjustLeft + 'px';
+      dom.style.top = target[1] + adjustTop + 'px';
     } else if (target.target) {
-      dom.style.left = target.pageX + 'px';
-      dom.style.top = target.pageY + 'px';
+      dom.style.left = target.pageX + adjustLeft + 'px';
+      dom.style.top = target.pageY + adjustTop + 'px';
     } else if (target === 'center') {
-      debugger;
       var selfWidth = dom.offsetWidth;
       var selfHeight = dom.offsetHeight;
 
@@ -713,8 +745,8 @@ Popup.prototype = {
       var windowHeight = window.innerHeight || document.documentElement.clientHeight;
       var docHeight = Math.max(windowHeight, document.body.offsetHeight);
 
-      dom.style.left = (windowWidth - selfWidth) / 2 + 'px';
-      dom.style.top = (docHeight - selfHeight) / 2 + 'px';
+      dom.style.left = (windowWidth - selfWidth) / 2 + adjustLeft + 'px';
+      dom.style.top = (docHeight - selfHeight) / 2 + adjustTop + 'px';
     }
   },
   afterLocate: function() {
@@ -773,9 +805,7 @@ Popup.prototype = {
     var modal = this.get('modal');
 
     if (modal) {
-      modalManager.show({
-        zIndex: Popup.nextZIndex()
-      });
+      modalManager.show(popover.$id, Popup.nextZIndex());
     }
 
     if (!dom) {
@@ -881,7 +911,7 @@ Popup.prototype = {
     dom.style.top = '';
 
     if (this.options.modal) {
-      modalManager.hide(this);
+      modalManager.hide(this.$id);
     }
 
     if (this.get('detachAfterHide')) {

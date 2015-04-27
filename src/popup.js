@@ -22,11 +22,14 @@ var extend = function(dst) {
 
 var modalManager = require('./modal-manager');
 
+var seed = 1;
+
 var Popup = function (options) {
   options = options || {};
   this.options = extend({}, this.defaults, options);
 
   //inside use only
+  this.$id = '$popup_' + seed++;
   this.shouldRefreshOnVisible = false;
   this.visible = false;
   this.showTimer = null;
@@ -158,13 +161,13 @@ Popup.prototype = {
     this.options = null;
   },
   locate: function() {
-    var popover = this;
-    var dom = popover.dom;
-    var placement = popover.get('placement');
-    var alignment = popover.get('alignment') || 'center';
-    var target = popover.get('target');
-    var adjustTop = popover.get('adjustTop') || 0;
-    var adjustLeft = popover.get('adjustLeft') || 0;
+    var popup = this;
+    var dom = popup.dom;
+    var placement = popup.get('placement');
+    var alignment = popup.get('alignment') || 'center';
+    var target = popup.get('target');
+    var adjustTop = popup.get('adjustTop') || 0;
+    var adjustLeft = popup.get('adjustLeft') || 0;
 
     if (target.nodeType) {
       var positionMap = {};
@@ -244,7 +247,7 @@ Popup.prototype = {
         }
       }
 
-      popover.afterLocate(finalPlacement, finalAlignment);
+      popup.afterLocate(finalPlacement, finalAlignment);
     } else if (target instanceof Array && target.length === 2) {
       dom.style.left = target[0] + adjustLeft + 'px';
       dom.style.top = target[1] + adjustTop + 'px';
@@ -269,45 +272,45 @@ Popup.prototype = {
     return true;
   },
   show: function() {
-    var popover = this;
+    var popup = this;
 
-    if (!popover.willShow()) return;
+    if (!popup.willShow()) return;
 
-    if (popover.hideTimer) {
-      clearTimeout(popover.hideTimer);
-      popover.hideTimer = null;
+    if (popup.hideTimer) {
+      clearTimeout(popup.hideTimer);
+      popup.hideTimer = null;
     }
 
-    if (popover.visible) return;
+    if (popup.visible) return;
 
-    if (popover.showTimer) {
-      clearTimeout(popover.showTimer);
-      popover.showTimer = null;
+    if (popup.showTimer) {
+      clearTimeout(popup.showTimer);
+      popup.showTimer = null;
     }
 
-    var showDelay = popover.get('showDelay');
+    var showDelay = popup.get('showDelay');
 
     if (Number(showDelay) > 0) {
-      popover.showTimer = setTimeout(function() {
-        popover.showTimer = null;
-        popover.doShow();
+      popup.showTimer = setTimeout(function() {
+        popup.showTimer = null;
+        popup.doShow();
       }, showDelay);
     } else {
-      popover.doShow();
+      popup.doShow();
     }
   },
   doShow: function() {
-    var popover = this;
+    var popup = this;
 
-    popover.visible = true;
+    popup.visible = true;
 
-    var dom = popover.dom;
+    var dom = popup.dom;
 
     function attach() {
-      if (popover.get('appendToBody')) {
+      if (popup.get('appendToBody')) {
         document.body.appendChild(dom);
       } else {
-        var target = popover.get('target');
+        var target = popup.get('target');
         if (target && target.nodeType) {
           target.parentNode.appendChild(dom);
         } else {
@@ -319,21 +322,19 @@ Popup.prototype = {
     var modal = this.get('modal');
 
     if (modal) {
-      modalManager.show({
-        zIndex: Popup.nextZIndex()
-      });
+      modalManager.show(popup.$id, Popup.nextZIndex());
     }
 
     if (!dom) {
-      popover.dom = dom = popover.render();
+      popup.dom = dom = popup.render();
       attach();
-      popover.refresh();
+      popup.refresh();
     } else if (!dom.parentNode || dom.parentNode.nodeType === 11) { //detached element's parentNode is a DocumentFragment in IE8
       attach();
 
-      if (popover.shouldRefreshOnVisible) {
-        popover.refresh();
-        popover.shouldRefreshOnVisible = false;
+      if (popup.shouldRefreshOnVisible) {
+        popup.refresh();
+        popup.shouldRefreshOnVisible = false;
       }
     }
 
@@ -342,7 +343,7 @@ Popup.prototype = {
     dom.style.visibility = 'hidden';
     dom.style.display = '';
 
-    popover.locate();
+    popup.locate();
 
     var zIndex = this.get('zIndex');
 
@@ -352,15 +353,15 @@ Popup.prototype = {
       dom.style.zIndex = zIndex;
     }
 
-    var animation = popover.get('animation');
-    var showAnimation = popover.get('showAnimation');
+    var animation = popup.get('animation');
+    var showAnimation = popup.get('showAnimation');
     if (showAnimation === undefined) {
       showAnimation = animation;
     }
     if (transition.support && showAnimation !== false) {
       var config = Popup.getAnimation(showAnimation);
       if (config.show) {
-        config.show.apply(null, [popover]);
+        config.show.apply(null, [popup]);
       }
     }
 
@@ -370,53 +371,53 @@ Popup.prototype = {
     return true;
   },
   hide: function() {
-    var popover = this;
+    var popup = this;
 
-    if (!popover.willHide()) return;
+    if (!popup.willHide()) return;
 
-    if (popover.showTimer !== null) {
-      clearTimeout(popover.showTimer);
-      popover.showTimer = null;
+    if (popup.showTimer !== null) {
+      clearTimeout(popup.showTimer);
+      popup.showTimer = null;
     }
 
-    if (!popover.visible) return;
+    if (!popup.visible) return;
 
-    if (popover.hideTimer) {
-      clearTimeout(popover.hideTimer);
-      popover.hideTimer = null;
+    if (popup.hideTimer) {
+      clearTimeout(popup.hideTimer);
+      popup.hideTimer = null;
     }
 
-    var hideDelay = popover.get('hideDelay');
+    var hideDelay = popup.get('hideDelay');
 
     if (Number(hideDelay) > 0) {
-      popover.hideTimer = setTimeout(function() {
-        popover.hideTimer = null;
-        popover.doHide();
+      popup.hideTimer = setTimeout(function() {
+        popup.hideTimer = null;
+        popup.doHide();
       }, hideDelay);
     } else {
-      popover.doHide();
+      popup.doHide();
     }
   },
   doHide: function() {
-    var popover = this;
+    var popup = this;
 
-    popover.visible = false;
+    popup.visible = false;
 
-    var dom = popover.dom;
+    var dom = popup.dom;
     if (dom) {
 
-      var animation = popover.get('animation');
-      var hideAnimation = popover.get('hideAnimation');
+      var animation = popup.get('animation');
+      var hideAnimation = popup.get('hideAnimation');
       if (hideAnimation === undefined) {
         hideAnimation = animation;
       }
       if (transition.support && hideAnimation !== false) {
         var config = Popup.getAnimation(hideAnimation);
         if (config.hide) {
-          config.hide.apply(null, [popover]);
+          config.hide.apply(null, [popup]);
         }
       } else {
-        popover.afterHide();
+        popup.afterHide();
       }
     }
   },
@@ -427,7 +428,7 @@ Popup.prototype = {
     dom.style.top = '';
 
     if (this.options.modal) {
-      modalManager.hide(this);
+      modalManager.hide(this.$id);
     }
 
     if (this.get('detachAfterHide')) {
