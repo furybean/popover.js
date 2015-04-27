@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>A dialog demo</title>
+  <script src="dialog.bundle.js"></script>
+  <style>
+    .dialog {
+      position: absolute;
+      background: white;
+      border: 1px solid gray;
+    }
+  </style>
+</head>
+<body>
+<button id="btn1">show dialog</button>
+<script>
+  var dialog;
+  window.onload = function () {
+    var btn1 = document.getElementById('btn1');
+    dialog = new Dialog({
+      target: "center",
+      detachAfterHide: false,
+      animation: 'pop'
+    });
+
+    btn1.onclick = function() {
+      dialog.show();
+    }
+  };
+</script>
+</body>
+</html>
