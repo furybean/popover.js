@@ -1,21 +1,29 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var NAME = 'Popover';
+var POPUP_NAME = 'Popup';
+var POPOVER_NAME = 'Popover';
 
+var Popup = require('./popup');
 var Popover = require('./popover');
 
 if (typeof define === 'function' && define.amd) { // For AMD
-  define(function() {
+  define(POPUP_NAME, function() {
+    return Popup;
+  });
+  define(POPOVER_NAME, function() {
     return Popover;
   });
 } else if (typeof angular === 'object' && !!angular.version) {
-  angular.module('popover.js', []).factory(NAME, function() {
+  angular.module('popover.js', []).factory(POPUP_NAME, function() {
+    return Popup;
+  }).factory(POPOVER_NAME, function() {
     return Popover;
   });
 } else {
-  Number(document.documentMode) < 9 && window.execScript('var ' + NAME);
-  window[NAME] = Popover;
+  Number(document.documentMode) < 9 && window.execScript('var ' + POPUP_NAME + ',' + POPOVER_NAME + ';');
+  window[POPUP_NAME] = Popup;
+  window[POPOVER_NAME] = Popover;
 }
-},{"./popover":5}],2:[function(require,module,exports){
+},{"./popover":5,"./popup":6}],2:[function(require,module,exports){
 var domUtil = require('./dom-util');
 var transition = require('./transition');
 
