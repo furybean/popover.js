@@ -19,49 +19,67 @@ if (typeof define === 'function' && define.amd) { // For AMD
 var domUtil = require('./dom-util');
 var transition = require('./transition');
 
+var transitionProperty = transition.prefix + 'transition';
+var transformProperty = transition.prefix + 'transform';
+
 module.exports = {
   'fade': {
     duration: 200,
     show: function(popover) {
-      domUtil.addClass(popover.dom, 'fade-in');
+      domUtil.setStyle(popover.dom, 'opacity', 0);
+
       popover.dom.style.visibility = '';
+
       setTimeout(function() {
         domUtil.bindOnce(popover.dom, transition.event, function() {
-          domUtil.removeClass(popover.dom, 'fade-in in');
+          domUtil.setStyle(popover.dom, transitionProperty, '');
+          domUtil.setStyle(popover.dom, 'opacity', '');
         });
-        domUtil.addClass(popover.dom, 'in');
+        domUtil.setStyle(popover.dom, transitionProperty, 'opacity 200ms linear');
+        domUtil.setStyle(popover.dom, 'opacity', 1);
       }, 10);
     },
     hide: function(popover) {
-      domUtil.addClass(popover.dom, 'fade-out');
+      domUtil.setStyle(popover.dom, 'opacity', 1);
+
       setTimeout(function() {
         domUtil.bindOnce(popover.dom, transition.event, function() {
           popover.afterHide();
-          domUtil.removeClass(popover.dom, 'fade-out out');
+          domUtil.setStyle(popover.dom, transitionProperty, '');
+          domUtil.setStyle(popover.dom, 'opacity', '');
         });
-        domUtil.addClass(popover.dom, 'out');
+        domUtil.setStyle(popover.dom, transitionProperty, 'opacity 200ms linear');
+        domUtil.setStyle(popover.dom, 'opacity', 0);
       }, 10);
     }
   },
   'pop': {
     duration: 200,
     show: function(popover) {
-      domUtil.addClass(popover.dom, 'pop-in');
+      domUtil.setStyle(popover.dom, transformProperty, 'scale(0.8)');
+
+      popover.dom.style.visibility = '';
+
       setTimeout(function() {
         domUtil.bindOnce(popover.dom, transition.event, function() {
-          domUtil.removeClass(popover.dom, 'pop-in in');
+          domUtil.setStyle(popover.dom, transitionProperty, '');
+          domUtil.setStyle(popover.dom, transformProperty, '');
         });
-        domUtil.addClass(popover.dom, 'in');
+        domUtil.setStyle(popover.dom, transitionProperty, transformProperty + ' 200ms cubic-bezier(0.3, 0, 0, 1.5)');
+        domUtil.setStyle(popover.dom, transformProperty, 'none');
       }, 10);
     },
     hide: function(popover) {
-      domUtil.addClass(popover.dom, 'pop-out');
+      domUtil.setStyle(popover.dom, transformProperty, 'none');
+
       setTimeout(function() {
         domUtil.bindOnce(popover.dom, transition.event, function() {
           popover.afterHide();
-          domUtil.removeClass(popover.dom, 'pop-out out');
+          domUtil.setStyle(popover.dom, transitionProperty, '');
+          domUtil.setStyle(popover.dom, transformProperty, '');
         });
-        domUtil.addClass(popover.dom, 'out');
+        domUtil.setStyle(popover.dom, transitionProperty, transformProperty + ' 200ms cubic-bezier(0.3, 0, 0, 1.5)');
+        domUtil.setStyle(popover.dom, transformProperty, 'scale(0.8)');
       }, 10);
     }
   }
@@ -112,6 +130,21 @@ var getStyle = ieVersion < 9 ? function(element, styleName) {
     return element.style[styleName] || computed ? computed[styleName] : null;
   } catch(e) {
     return element.style[styleName];
+  }
+};
+
+var setStyle = function(element, styleName, value) {
+  if (!element || !styleName) return;
+
+  if (typeof styleName === 'object') {
+    for (var prop in styleName) {
+      if (styleName.hasOwnProperty(prop)) {
+        setStyle(element, prop, styleName[prop]);
+      }
+    }
+  } else {
+    styleName = camelCase(styleName);
+    element.style[styleName] = value;
   }
 };
 
@@ -300,6 +333,8 @@ var removeClass = function(el, cls) {
 };
 
 module.exports = {
+  getStyle: getStyle,
+  setStyle: setStyle,
   hasClass: hasClass,
   addClass: addClass,
   camelCase: camelCase,
@@ -644,13 +679,13 @@ Popup.prototype = {
     this.options = null;
   },
   locate: function() {
-    var popover = this;
-    var dom = popover.dom;
-    var placement = popover.get('placement');
-    var alignment = popover.get('alignment') || 'center';
-    var target = popover.get('target');
-    var adjustTop = popover.get('adjustTop') || 0;
-    var adjustLeft = popover.get('adjustLeft') || 0;
+    var popup = this;
+    var dom = popup.dom;
+    var placement = popup.get('placement');
+    var alignment = popup.get('alignment') || 'center';
+    var target = popup.get('target');
+    var adjustTop = popup.get('adjustTop') || 0;
+    var adjustLeft = popup.get('adjustLeft') || 0;
 
     if (target.nodeType) {
       var positionMap = {};
@@ -730,7 +765,7 @@ Popup.prototype = {
         }
       }
 
-      popover.afterLocate(finalPlacement, finalAlignment);
+      popup.afterLocate(finalPlacement, finalAlignment);
     } else if (target instanceof Array && target.length === 2) {
       dom.style.left = target[0] + adjustLeft + 'px';
       dom.style.top = target[1] + adjustTop + 'px';
@@ -755,45 +790,45 @@ Popup.prototype = {
     return true;
   },
   show: function() {
-    var popover = this;
+    var popup = this;
 
-    if (!popover.willShow()) return;
+    if (!popup.willShow()) return;
 
-    if (popover.hideTimer) {
-      clearTimeout(popover.hideTimer);
-      popover.hideTimer = null;
+    if (popup.hideTimer) {
+      clearTimeout(popup.hideTimer);
+      popup.hideTimer = null;
     }
 
-    if (popover.visible) return;
+    if (popup.visible) return;
 
-    if (popover.showTimer) {
-      clearTimeout(popover.showTimer);
-      popover.showTimer = null;
+    if (popup.showTimer) {
+      clearTimeout(popup.showTimer);
+      popup.showTimer = null;
     }
 
-    var showDelay = popover.get('showDelay');
+    var showDelay = popup.get('showDelay');
 
     if (Number(showDelay) > 0) {
-      popover.showTimer = setTimeout(function() {
-        popover.showTimer = null;
-        popover.doShow();
+      popup.showTimer = setTimeout(function() {
+        popup.showTimer = null;
+        popup.doShow();
       }, showDelay);
     } else {
-      popover.doShow();
+      popup.doShow();
     }
   },
   doShow: function() {
-    var popover = this;
+    var popup = this;
 
-    popover.visible = true;
+    popup.visible = true;
 
-    var dom = popover.dom;
+    var dom = popup.dom;
 
     function attach() {
-      if (popover.get('appendToBody')) {
+      if (popup.get('appendToBody')) {
         document.body.appendChild(dom);
       } else {
-        var target = popover.get('target');
+        var target = popup.get('target');
         if (target && target.nodeType) {
           target.parentNode.appendChild(dom);
         } else {
@@ -805,19 +840,19 @@ Popup.prototype = {
     var modal = this.get('modal');
 
     if (modal) {
-      modalManager.show(popover.$id, Popup.nextZIndex());
+      modalManager.show(popup.$id, Popup.nextZIndex());
     }
 
     if (!dom) {
-      popover.dom = dom = popover.render();
+      popup.dom = dom = popup.render();
       attach();
-      popover.refresh();
+      popup.refresh();
     } else if (!dom.parentNode || dom.parentNode.nodeType === 11) { //detached element's parentNode is a DocumentFragment in IE8
       attach();
 
-      if (popover.shouldRefreshOnVisible) {
-        popover.refresh();
-        popover.shouldRefreshOnVisible = false;
+      if (popup.shouldRefreshOnVisible) {
+        popup.refresh();
+        popup.shouldRefreshOnVisible = false;
       }
     }
 
@@ -826,7 +861,7 @@ Popup.prototype = {
     dom.style.visibility = 'hidden';
     dom.style.display = '';
 
-    popover.locate();
+    popup.locate();
 
     var zIndex = this.get('zIndex');
 
@@ -836,15 +871,15 @@ Popup.prototype = {
       dom.style.zIndex = zIndex;
     }
 
-    var animation = popover.get('animation');
-    var showAnimation = popover.get('showAnimation');
+    var animation = popup.get('animation');
+    var showAnimation = popup.get('showAnimation');
     if (showAnimation === undefined) {
       showAnimation = animation;
     }
     if (transition.support && showAnimation !== false) {
       var config = Popup.getAnimation(showAnimation);
       if (config.show) {
-        config.show.apply(null, [popover]);
+        config.show.apply(null, [popup]);
       }
     }
 
@@ -854,53 +889,53 @@ Popup.prototype = {
     return true;
   },
   hide: function() {
-    var popover = this;
+    var popup = this;
 
-    if (!popover.willHide()) return;
+    if (!popup.willHide()) return;
 
-    if (popover.showTimer !== null) {
-      clearTimeout(popover.showTimer);
-      popover.showTimer = null;
+    if (popup.showTimer !== null) {
+      clearTimeout(popup.showTimer);
+      popup.showTimer = null;
     }
 
-    if (!popover.visible) return;
+    if (!popup.visible) return;
 
-    if (popover.hideTimer) {
-      clearTimeout(popover.hideTimer);
-      popover.hideTimer = null;
+    if (popup.hideTimer) {
+      clearTimeout(popup.hideTimer);
+      popup.hideTimer = null;
     }
 
-    var hideDelay = popover.get('hideDelay');
+    var hideDelay = popup.get('hideDelay');
 
     if (Number(hideDelay) > 0) {
-      popover.hideTimer = setTimeout(function() {
-        popover.hideTimer = null;
-        popover.doHide();
+      popup.hideTimer = setTimeout(function() {
+        popup.hideTimer = null;
+        popup.doHide();
       }, hideDelay);
     } else {
-      popover.doHide();
+      popup.doHide();
     }
   },
   doHide: function() {
-    var popover = this;
+    var popup = this;
 
-    popover.visible = false;
+    popup.visible = false;
 
-    var dom = popover.dom;
+    var dom = popup.dom;
     if (dom) {
 
-      var animation = popover.get('animation');
-      var hideAnimation = popover.get('hideAnimation');
+      var animation = popup.get('animation');
+      var hideAnimation = popup.get('hideAnimation');
       if (hideAnimation === undefined) {
         hideAnimation = animation;
       }
       if (transition.support && hideAnimation !== false) {
         var config = Popup.getAnimation(hideAnimation);
         if (config.hide) {
-          config.hide.apply(null, [popover]);
+          config.hide.apply(null, [popup]);
         }
       } else {
-        popover.afterHide();
+        popup.afterHide();
       }
     }
   },
@@ -925,17 +960,17 @@ Popup.prototype.constructor = Popup;
 module.exports = Popup;
 },{"./animation":2,"./dom-util":3,"./modal-manager":4,"./transition":7}],7:[function(require,module,exports){
 var prefixMap = {
-  'mozTransition': {
+  'MozTransition': {
     prefix: '-moz-',
     event: 'transitionend'
   },
   'oTransition': {
     prefix:'-o-',
-    event: 'oTransitionend'
+    event: 'oTransitionEnd'
   },
   'webkitTransition': {
     prefix: '-webkit-',
-    event: 'webkitTransitionend'
+    event: 'webkitTransitionEnd'
   }
 };
 
@@ -943,19 +978,12 @@ var testEl = document.body ? document.body : document.createElement('div');
 
 var result;
 
-if ('transition' in testEl.style) {
-  result = {
-    prefix: '',
-    event: 'transitionend'
-  };
-} else {
-  for (var prop in prefixMap) {
-    if (prefixMap.hasOwnProperty(prop)) {
-      if (prop in testEl.style) {
-        result = prefixMap[prop];
+for (var prop in prefixMap) {
+  if (prefixMap.hasOwnProperty(prop)) {
+    if (prop in testEl.style) {
+      result = prefixMap[prop];
 
-        break;
-      }
+      break;
     }
   }
 }

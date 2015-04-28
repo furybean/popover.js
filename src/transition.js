@@ -1,15 +1,15 @@
 var prefixMap = {
-  'mozTransition': {
+  'MozTransition': {
     prefix: '-moz-',
     event: 'transitionend'
   },
   'oTransition': {
     prefix:'-o-',
-    event: 'oTransitionend'
+    event: 'oTransitionEnd'
   },
   'webkitTransition': {
     prefix: '-webkit-',
-    event: 'webkitTransitionend'
+    event: 'webkitTransitionEnd'
   }
 };
 
@@ -17,19 +17,12 @@ var testEl = document.body ? document.body : document.createElement('div');
 
 var result;
 
-if ('transition' in testEl.style) {
-  result = {
-    prefix: '',
-    event: 'transitionend'
-  };
-} else {
-  for (var prop in prefixMap) {
-    if (prefixMap.hasOwnProperty(prop)) {
-      if (prop in testEl.style) {
-        result = prefixMap[prop];
+for (var prop in prefixMap) {
+  if (prefixMap.hasOwnProperty(prop)) {
+    if (prop in testEl.style) {
+      result = prefixMap[prop];
 
-        break;
-      }
+      break;
     }
   }
 }

@@ -46,6 +46,21 @@ var getStyle = ieVersion < 9 ? function(element, styleName) {
   }
 };
 
+var setStyle = function(element, styleName, value) {
+  if (!element || !styleName) return;
+
+  if (typeof styleName === 'object') {
+    for (var prop in styleName) {
+      if (styleName.hasOwnProperty(prop)) {
+        setStyle(element, prop, styleName[prop]);
+      }
+    }
+  } else {
+    styleName = camelCase(styleName);
+    element.style[styleName] = value;
+  }
+};
+
 var getRect = function(element) {
   if (ieVersion < 9) {
     var rect = element.getBoundingClientRect();
@@ -231,6 +246,8 @@ var removeClass = function(el, cls) {
 };
 
 module.exports = {
+  getStyle: getStyle,
+  setStyle: setStyle,
   hasClass: hasClass,
   addClass: addClass,
   camelCase: camelCase,
