@@ -152,7 +152,11 @@ var setStyle = function(element, styleName, value) {
     }
   } else {
     styleName = camelCase(styleName);
-    element.style[styleName] = value;
+    if (styleName === 'opacity' && ieVersion < 9) {
+      element.style.filter = isNaN(value) ? '' : 'alpha(opacity=' + value * 100 + ')';
+    } else {
+      element.style[styleName] = value;
+    }
   }
 };
 
@@ -364,6 +368,8 @@ var getModal = function() {
   return modalDom;
 };
 
+var domUtil = require('./dom-util');
+
 var ModalManager = {
   stack: [],
   show: function(id, zIndex) {
@@ -378,17 +384,12 @@ var ModalManager = {
       width: '100%',
       height: '100%',
       opacity: '0.5',
-      background: '#000',
-      display: 'none'
+      background: '#000'
     };
 
-    for (var name in style) {
-      if (style.hasOwnProperty(name)) {
-        modalDom.style[name] = style[name];
-      }
-    }
+    domUtil.setStyle(modalDom, style);
 
-    if (!modalDom.parentNode)
+    if (!modalDom.parentNode || modalDom.parentNode.nodeType === 11)
       document.body.appendChild(modalDom);
 
     if (zIndex) {
@@ -428,7 +429,7 @@ var ModalManager = {
 };
 
 module.exports = ModalManager;
-},{}],5:[function(require,module,exports){
+},{"./dom-util":3}],5:[function(require,module,exports){
 var domUtil = require('./dom-util');
 var bindEvent = domUtil.bindEvent;
 var unbindEvent = domUtil.unbindEvent;
@@ -695,7 +696,7 @@ Popup.prototype = {
     var adjustTop = popup.get('adjustTop') || 0;
     var adjustLeft = popup.get('adjustLeft') || 0;
 
-    if (target.nodeType) {
+    if (target && target.nodeType) {
       var positionMap = {};
 
       var tryLocate = function(placement, alignment, adjustLeft, adjustTop) {
@@ -777,7 +778,7 @@ Popup.prototype = {
     } else if (target instanceof Array && target.length === 2) {
       dom.style.left = target[0] + adjustLeft + 'px';
       dom.style.top = target[1] + adjustTop + 'px';
-    } else if (target.target) {
+    } else if (target && target.target) {
       dom.style.left = target.pageX + adjustLeft + 'px';
       dom.style.top = target.pageY + adjustTop + 'px';
     } else if (target === 'center') {
@@ -786,10 +787,15 @@ Popup.prototype = {
 
       var windowWidth = window.innerWidth || document.documentElement.clientWidth;
       var windowHeight = window.innerHeight || document.documentElement.clientHeight;
-      var docHeight = Math.max(windowHeight, document.body.offsetHeight);
 
+      var scrollTop = Math.max(window.pageYOffset || 0, document.documentElement.scrollTop);
+
+      if (domUtil.getStyle(dom, 'position') === 'fixed') {
+        scrollTop = 0;
+      }
+      
       dom.style.left = (windowWidth - selfWidth) / 2 + adjustLeft + 'px';
-      dom.style.top = (docHeight - selfHeight) / 2 + adjustTop + 'px';
+      dom.style.top = Math.max((windowHeight - selfHeight) / 2 + scrollTop + adjustTop, 0) + 'px';
     }
   },
   afterLocate: function() {

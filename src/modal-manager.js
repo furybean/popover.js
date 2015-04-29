@@ -8,6 +8,8 @@ var getModal = function() {
   return modalDom;
 };
 
+var domUtil = require('./dom-util');
+
 var ModalManager = {
   stack: [],
   show: function(id, zIndex) {
@@ -22,17 +24,12 @@ var ModalManager = {
       width: '100%',
       height: '100%',
       opacity: '0.5',
-      background: '#000',
-      display: 'none'
+      background: '#000'
     };
 
-    for (var name in style) {
-      if (style.hasOwnProperty(name)) {
-        modalDom.style[name] = style[name];
-      }
-    }
+    domUtil.setStyle(modalDom, style);
 
-    if (!modalDom.parentNode)
+    if (!modalDom.parentNode || modalDom.parentNode.nodeType === 11)
       document.body.appendChild(modalDom);
 
     if (zIndex) {

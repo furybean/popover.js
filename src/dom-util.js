@@ -57,7 +57,11 @@ var setStyle = function(element, styleName, value) {
     }
   } else {
     styleName = camelCase(styleName);
-    element.style[styleName] = value;
+    if (styleName === 'opacity' && ieVersion < 9) {
+      element.style.filter = isNaN(value) ? '' : 'alpha(opacity=' + value * 100 + ')';
+    } else {
+      element.style[styleName] = value;
+    }
   }
 };
 

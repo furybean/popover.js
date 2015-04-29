@@ -169,7 +169,7 @@ Popup.prototype = {
     var adjustTop = popup.get('adjustTop') || 0;
     var adjustLeft = popup.get('adjustLeft') || 0;
 
-    if (target.nodeType) {
+    if (target && target.nodeType) {
       var positionMap = {};
 
       var tryLocate = function(placement, alignment, adjustLeft, adjustTop) {
@@ -251,7 +251,7 @@ Popup.prototype = {
     } else if (target instanceof Array && target.length === 2) {
       dom.style.left = target[0] + adjustLeft + 'px';
       dom.style.top = target[1] + adjustTop + 'px';
-    } else if (target.target) {
+    } else if (target && target.target) {
       dom.style.left = target.pageX + adjustLeft + 'px';
       dom.style.top = target.pageY + adjustTop + 'px';
     } else if (target === 'center') {
@@ -260,10 +260,15 @@ Popup.prototype = {
 
       var windowWidth = window.innerWidth || document.documentElement.clientWidth;
       var windowHeight = window.innerHeight || document.documentElement.clientHeight;
-      var docHeight = Math.max(windowHeight, document.body.offsetHeight);
+
+      var scrollTop = Math.max(window.pageYOffset || 0, document.documentElement.scrollTop);
+
+      if (domUtil.getStyle(dom, 'position') === 'fixed') {
+        scrollTop = 0;
+      }
 
       dom.style.left = (windowWidth - selfWidth) / 2 + adjustLeft + 'px';
-      dom.style.top = (docHeight - selfHeight) / 2 + adjustTop + 'px';
+      dom.style.top = Math.max((windowHeight - selfHeight) / 2 + scrollTop + adjustTop, 0) + 'px';
     }
   },
   afterLocate: function() {
