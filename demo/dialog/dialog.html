@@ -8,33 +8,11 @@
     .dialog {
       position: absolute;
       background: white;
-      border: 1px solid gray;
+      border: 1px solid red;
     }
 
-    .pop-in {
-      -webkit-transform: scale(0.8);
-      -o-transform: scale(0.8);
-      transform: scale(0.8);
-    }
-
-    .pop-in.in {
-      -webkit-transform: none;
-      -o-transform: none;
-      transform: none;
-      transition: transform 0.15s cubic-bezier(0.3, 0, 0, 1.5);
-    }
-
-    .pop-out {
-      -webkit-transform: none;
-      -o-transform: none;
-      transform: none;
-    }
-
-    .pop-out.out {
-      -webkit-transform: scale(0.8);
-      -o-transform: scale(0.8);
-      transform: scale(0.8);
-      transition: transform 0.15s cubic-bezier(0.3, 0, 0, 1.5);
+    html, body {
+      height: 100%;
     }
   </style>
 </head>
@@ -45,7 +23,10 @@
   window.onload = function () {
     var btn1 = document.getElementById('btn1');
     dialog = new Dialog({
-      target: "center",
+      target: document.body,
+      placement: 'innerRight',
+      alignment: 'start',
+      adjustLeft: -20,
       detachAfterHide: false,
       animation: 'pop'
     });

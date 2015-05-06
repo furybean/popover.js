@@ -186,31 +186,53 @@ var positionElement = function(element, target, placement, alignment) {
   var selfRect = getRect(element);
   var position = {};
 
-  if (placement == 'left') {
-    position.left = targetRect.left - selfRect.width;
-  } else if (placement == 'right') {
-    position.left = targetRect.right;
-  } else if (placement == 'top') {
-    position.top = targetRect.top - selfRect.height;
-  } else if (placement == 'bottom') {
-    position.top = targetRect.bottom;
+  switch (placement) {
+    case 'left':
+      position.left = targetRect.left - selfRect.width;
+      break;
+    case 'right':
+      position.left = targetRect.right;
+      break;
+    case 'innerLeft':
+      position.left = targetRect.left;
+      break;
+    case 'innerRight':
+      position.left = targetRect.right - selfRect.width;
+      break;
+    case 'center':
+      position.left = (targetRect.right - selfRect.width) / 2;
+      break;
+    case 'top':
+      position.top = targetRect.top - selfRect.height;
+      break;
+    case 'bottom':
+      position.top = targetRect.bottom;
+      break;
   }
 
-  if (placement == 'left' || placement == 'right') {
-    if (alignment == 'center') {
-      position.top = (targetRect.top + targetRect.bottom) / 2 - selfRect.height / 2;
-    } else if (alignment == 'start') {
-      position.top = targetRect.top;
-    } else if (alignment == 'end') {
-      position.top = targetRect.bottom - selfRect.height;
+  if (placement == 'left' || placement == 'right' || placement == 'innerLeft' || placement == 'innerRight') {
+    switch (alignment) {
+      case 'start':
+        position.top = targetRect.top;
+        break;
+      case 'center':
+        position.top = (targetRect.top + targetRect.bottom) / 2 - selfRect.height / 2;
+        break;
+      case 'end':
+        position.top = targetRect.bottom - selfRect.height;
+        break;
     }
   } else {
-    if (alignment == 'center') {
-      position.left = (targetRect.left + targetRect.right) / 2 - selfRect.width / 2;
-    } else if (alignment == 'start') {
-      position.left = targetRect.left;
-    } else if (alignment == 'end') {
-      position.left = targetRect.right - selfRect.width;
+    switch (alignment) {
+      case 'start':
+        position.left = targetRect.left;
+        break;
+      case 'center':
+        position.left = (targetRect.left + targetRect.right) / 2 - selfRect.width / 2;
+        break;
+      case 'end':
+        position.left = targetRect.right - selfRect.width;
+        break;
     }
   }
 
@@ -620,21 +642,18 @@ for (var prop in supportAnimations) {
   }
 }
 
-var PLACEMENT_REVERSE = {
-  top: 'bottom', bottom: 'top', left: 'right', right: 'left'
-};
-
-var ALIGNMENT_REVERSE = {
-  start: 'end', end: 'start', center: 'center'
-};
+var PLACEMENT_REVERSE = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
+var ALIGNMENT_REVERSE = { start: 'end', end: 'start', center: 'center' };
 
 Popup.prototype = {
   defaults: {
     showDelay: 0,
     hideDelay: 0,
+
     placement: 'top',
     alignment: 'center',
-    appendToBody: false,
+
+    attachToBody: false,
     detachAfterHide: true,
 
     target: null,
@@ -648,6 +667,7 @@ Popup.prototype = {
 
     modal: false,
     zIndex: null,
+
     viewport: 'window',
     updatePositionOnResize: false,
     updatePositionOnScroll: false
@@ -690,22 +710,23 @@ Popup.prototype = {
   locate: function() {
     var popup = this;
     var dom = popup.dom;
-    var placement = popup.get('placement');
-    var alignment = popup.get('alignment') || 'center';
     var target = popup.get('target');
     var adjustTop = popup.get('adjustTop') || 0;
     var adjustLeft = popup.get('adjustLeft') || 0;
 
     if (target && target.nodeType) {
-      var positionMap = {};
+      var placement = popup.get('placement');
+      var alignment = popup.get('alignment') || 'center';
+
+      var positionCache = {};
 
       var tryLocate = function(placement, alignment, adjustLeft, adjustTop) {
         var key = placement + ',' + alignment;
-        var position = positionMap[key];
+        var position = positionCache[key];
 
         if (!position) {
           position = positionElement(dom, target, placement, alignment);
-          positionMap[key] = position;
+          positionCache[key] = position;
         }
 
         dom.style.left = position.left + adjustLeft + 'px';
@@ -793,7 +814,7 @@ Popup.prototype = {
       if (domUtil.getStyle(dom, 'position') === 'fixed') {
         scrollTop = 0;
       }
-      
+
       dom.style.left = (windowWidth - selfWidth) / 2 + adjustLeft + 'px';
       dom.style.top = Math.max((windowHeight - selfHeight) / 2 + scrollTop + adjustTop, 0) + 'px';
     }
@@ -839,11 +860,11 @@ Popup.prototype = {
     var dom = popup.dom;
 
     function attach() {
-      if (popup.get('appendToBody')) {
+      if (popup.get('attachToBody')) {
         document.body.appendChild(dom);
       } else {
         var target = popup.get('target');
-        if (target && target.nodeType) {
+        if (target && target.nodeType && target.nodeName !== 'BODY') {
           target.parentNode.appendChild(dom);
         } else {
           document.body.appendChild(dom);
@@ -852,7 +873,6 @@ Popup.prototype = {
     }
 
     var modal = this.get('modal');
-
     if (modal) {
       modalManager.show(popup.$id, Popup.nextZIndex());
     }
@@ -875,10 +895,13 @@ Popup.prototype = {
     dom.style.visibility = 'hidden';
     dom.style.display = '';
 
+    if (domUtil.getStyle(dom, 'position') === 'static') {
+      domUtil.setStyle(dom, 'position', 'absolute');
+    }
+
     popup.locate();
 
     var zIndex = this.get('zIndex');
-
     if (modal) {
       dom.style.zIndex = Popup.nextZIndex();
     } else if (zIndex) {
@@ -959,7 +982,7 @@ Popup.prototype = {
     dom.style.left = '';
     dom.style.top = '';
 
-    if (this.options.modal) {
+    if (this.get('modal')) {
       modalManager.hide(this.$id);
     }
 

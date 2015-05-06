@@ -93,21 +93,18 @@ for (var prop in supportAnimations) {
   }
 }
 
-var PLACEMENT_REVERSE = {
-  top: 'bottom', bottom: 'top', left: 'right', right: 'left'
-};
-
-var ALIGNMENT_REVERSE = {
-  start: 'end', end: 'start', center: 'center'
-};
+var PLACEMENT_REVERSE = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
+var ALIGNMENT_REVERSE = { start: 'end', end: 'start', center: 'center' };
 
 Popup.prototype = {
   defaults: {
     showDelay: 0,
     hideDelay: 0,
+
     placement: 'top',
     alignment: 'center',
-    appendToBody: false,
+
+    attachToBody: false,
     detachAfterHide: true,
 
     target: null,
@@ -121,6 +118,7 @@ Popup.prototype = {
 
     modal: false,
     zIndex: null,
+
     viewport: 'window',
     updatePositionOnResize: false,
     updatePositionOnScroll: false
@@ -163,22 +161,23 @@ Popup.prototype = {
   locate: function() {
     var popup = this;
     var dom = popup.dom;
-    var placement = popup.get('placement');
-    var alignment = popup.get('alignment') || 'center';
     var target = popup.get('target');
     var adjustTop = popup.get('adjustTop') || 0;
     var adjustLeft = popup.get('adjustLeft') || 0;
 
     if (target && target.nodeType) {
-      var positionMap = {};
+      var placement = popup.get('placement');
+      var alignment = popup.get('alignment') || 'center';
+
+      var positionCache = {};
 
       var tryLocate = function(placement, alignment, adjustLeft, adjustTop) {
         var key = placement + ',' + alignment;
-        var position = positionMap[key];
+        var position = positionCache[key];
 
         if (!position) {
           position = positionElement(dom, target, placement, alignment);
-          positionMap[key] = position;
+          positionCache[key] = position;
         }
 
         dom.style.left = position.left + adjustLeft + 'px';
@@ -312,11 +311,11 @@ Popup.prototype = {
     var dom = popup.dom;
 
     function attach() {
-      if (popup.get('appendToBody')) {
+      if (popup.get('attachToBody')) {
         document.body.appendChild(dom);
       } else {
         var target = popup.get('target');
-        if (target && target.nodeType) {
+        if (target && target.nodeType && target.nodeName !== 'BODY') {
           target.parentNode.appendChild(dom);
         } else {
           document.body.appendChild(dom);
@@ -325,7 +324,6 @@ Popup.prototype = {
     }
 
     var modal = this.get('modal');
-
     if (modal) {
       modalManager.show(popup.$id, Popup.nextZIndex());
     }
@@ -348,10 +346,13 @@ Popup.prototype = {
     dom.style.visibility = 'hidden';
     dom.style.display = '';
 
+    if (domUtil.getStyle(dom, 'position') === 'static') {
+      domUtil.setStyle(dom, 'position', 'absolute');
+    }
+
     popup.locate();
 
     var zIndex = this.get('zIndex');
-
     if (modal) {
       dom.style.zIndex = Popup.nextZIndex();
     } else if (zIndex) {
@@ -432,7 +433,7 @@ Popup.prototype = {
     dom.style.left = '';
     dom.style.top = '';
 
-    if (this.options.modal) {
+    if (this.get('modal')) {
       modalManager.hide(this.$id);
     }
 

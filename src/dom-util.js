@@ -91,31 +91,53 @@ var positionElement = function(element, target, placement, alignment) {
   var selfRect = getRect(element);
   var position = {};
 
-  if (placement == 'left') {
-    position.left = targetRect.left - selfRect.width;
-  } else if (placement == 'right') {
-    position.left = targetRect.right;
-  } else if (placement == 'top') {
-    position.top = targetRect.top - selfRect.height;
-  } else if (placement == 'bottom') {
-    position.top = targetRect.bottom;
+  switch (placement) {
+    case 'left':
+      position.left = targetRect.left - selfRect.width;
+      break;
+    case 'right':
+      position.left = targetRect.right;
+      break;
+    case 'innerLeft':
+      position.left = targetRect.left;
+      break;
+    case 'innerRight':
+      position.left = targetRect.right - selfRect.width;
+      break;
+    case 'center':
+      position.left = (targetRect.right - selfRect.width) / 2;
+      break;
+    case 'top':
+      position.top = targetRect.top - selfRect.height;
+      break;
+    case 'bottom':
+      position.top = targetRect.bottom;
+      break;
   }
 
-  if (placement == 'left' || placement == 'right') {
-    if (alignment == 'center') {
-      position.top = (targetRect.top + targetRect.bottom) / 2 - selfRect.height / 2;
-    } else if (alignment == 'start') {
-      position.top = targetRect.top;
-    } else if (alignment == 'end') {
-      position.top = targetRect.bottom - selfRect.height;
+  if (placement == 'left' || placement == 'right' || placement == 'innerLeft' || placement == 'innerRight') {
+    switch (alignment) {
+      case 'start':
+        position.top = targetRect.top;
+        break;
+      case 'center':
+        position.top = (targetRect.top + targetRect.bottom) / 2 - selfRect.height / 2;
+        break;
+      case 'end':
+        position.top = targetRect.bottom - selfRect.height;
+        break;
     }
   } else {
-    if (alignment == 'center') {
-      position.left = (targetRect.left + targetRect.right) / 2 - selfRect.width / 2;
-    } else if (alignment == 'start') {
-      position.left = targetRect.left;
-    } else if (alignment == 'end') {
-      position.left = targetRect.right - selfRect.width;
+    switch (alignment) {
+      case 'start':
+        position.left = targetRect.left;
+        break;
+      case 'center':
+        position.left = (targetRect.left + targetRect.right) / 2 - selfRect.width / 2;
+        break;
+      case 'end':
+        position.left = targetRect.right - selfRect.width;
+        break;
     }
   }
 
