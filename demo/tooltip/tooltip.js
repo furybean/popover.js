@@ -36,7 +36,8 @@ var Tooltip = Popover.extend({
 
     return content !== undefined && content !== null && content !== '';
   },
-  afterLocate: function(placement) {
+  afterLocate: function(args) {
+    var placement = args.placement;
     var popover = this;
 
     var dom = popover.dom;

@@ -164,6 +164,7 @@ Popup.prototype = {
     var target = popup.get('target');
     var adjustTop = popup.get('adjustTop') || 0;
     var adjustLeft = popup.get('adjustLeft') || 0;
+    var afterLocateArgs = {};
 
     if (target && target.nodeType) {
       var placement = popup.get('placement');
@@ -246,7 +247,11 @@ Popup.prototype = {
         }
       }
 
-      popup.afterLocate(finalPlacement, finalAlignment);
+      afterLocateArgs = {
+        placement: finalAlignment,
+        alignment: finalAlignment,
+        isOutside: outside !== 'none'
+      };
     } else if (target instanceof Array && target.length === 2) {
       dom.style.left = target[0] + adjustLeft + 'px';
       dom.style.top = target[1] + adjustTop + 'px';
@@ -269,6 +274,7 @@ Popup.prototype = {
       dom.style.left = (windowWidth - selfWidth) / 2 + adjustLeft + 'px';
       dom.style.top = Math.max((windowHeight - selfHeight) / 2 + scrollTop + adjustTop, 0) + 'px';
     }
+    popup.afterLocate(afterLocateArgs);
   },
   afterLocate: function() {
   },
