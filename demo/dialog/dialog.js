@@ -4,7 +4,8 @@ var Popup = require('../../src/popup.js');
 var Dialog = Popup.extend({
   defaults: {
     modal: true,
-    animation: false
+    animation: false,
+    target: 'center'
   },
   render: function() {
     var dom = document.createElement('div');
