@@ -1,17 +1,23 @@
+var domUtil = require('./dom-util');
+
 var getModal = function() {
   var modalDom = ModalManager.modalDom;
   if (!modalDom) {
     modalDom = document.createElement('div');
     ModalManager.modalDom = modalDom;
+
+    domUtil.bindEvent(modalDom, 'click', function() {
+      ModalManager.doOnClick && ModalManager.doOnClick();
+    });
   }
 
   return modalDom;
 };
 
-var domUtil = require('./dom-util');
-
 var ModalManager = {
   stack: [],
+  doOnClick: function() {
+  },
   show: function(id, zIndex) {
     if (!id || zIndex === undefined) return;
 

@@ -380,20 +380,26 @@ module.exports = {
   isElementOutside: isElementOutside
 };
 },{}],4:[function(require,module,exports){
+var domUtil = require('./dom-util');
+
 var getModal = function() {
   var modalDom = ModalManager.modalDom;
   if (!modalDom) {
     modalDom = document.createElement('div');
     ModalManager.modalDom = modalDom;
+
+    domUtil.bindEvent(modalDom, 'click', function() {
+      ModalManager.doOnClick && ModalManager.doOnClick();
+    });
   }
 
   return modalDom;
 };
 
-var domUtil = require('./dom-util');
-
 var ModalManager = {
   stack: [],
+  doOnClick: function() {
+  },
   show: function(id, zIndex) {
     if (!id || zIndex === undefined) return;
 
@@ -579,10 +585,32 @@ var Popup = function (options) {
 
   //inside use only
   this.$id = '$popup_' + seed++;
+
+  Popup.register(this.$id, this);
+
   this.shouldRefreshOnVisible = false;
   this.visible = false;
   this.showTimer = null;
   this.hideTimer = null;
+};
+
+var instances = {};
+
+Popup.getInstance = function(id) {
+  return instances[id];
+};
+
+Popup.register = function(id, instance) {
+  if (id && instance) {
+    instances[id] = instance;
+  }
+};
+
+Popup.unregister = function(id) {
+  if (id) {
+    instances[id] = null;
+    delete instances[id];
+  }
 };
 
 var getExtendFn = function(parentClass) {
@@ -668,6 +696,9 @@ Popup.prototype = {
     modal: false,
     zIndex: null,
 
+    hideOnPressEscape: false,
+    hideOnClickModal: false,
+
     viewport: 'window',
     updatePositionOnResize: false,
     updatePositionOnScroll: false
@@ -706,6 +737,8 @@ Popup.prototype = {
     }
     this.dom = null;
     this.options = null;
+    Popup.unregister(this.$id);
+    this.$id = null;
   },
   locate: function() {
     var popup = this;
@@ -713,6 +746,7 @@ Popup.prototype = {
     var target = popup.get('target');
     var adjustTop = popup.get('adjustTop') || 0;
     var adjustLeft = popup.get('adjustLeft') || 0;
+    var afterLocateArgs = {};
 
     if (target && target.nodeType) {
       var placement = popup.get('placement');
@@ -795,7 +829,11 @@ Popup.prototype = {
         }
       }
 
-      popup.afterLocate(finalPlacement, finalAlignment);
+      afterLocateArgs = {
+        placement: finalAlignment,
+        alignment: finalAlignment,
+        isOutside: outside !== 'none'
+      };
     } else if (target instanceof Array && target.length === 2) {
       dom.style.left = target[0] + adjustLeft + 'px';
       dom.style.top = target[1] + adjustTop + 'px';
@@ -818,6 +856,7 @@ Popup.prototype = {
       dom.style.left = (windowWidth - selfWidth) / 2 + adjustLeft + 'px';
       dom.style.top = Math.max((windowHeight - selfHeight) / 2 + scrollTop + adjustTop, 0) + 'px';
     }
+    popup.afterLocate(afterLocateArgs);
   },
   afterLocate: function() {
   },
@@ -993,6 +1032,37 @@ Popup.prototype = {
 };
 
 Popup.prototype.constructor = Popup;
+
+domUtil.bindEvent(window, 'keydown', function(event) {
+  if (event.keyCode === 27) { // ESC
+    if (modalManager.stack.length > 0) {
+      var topId = modalManager.stack[modalManager.stack.length - 1].id;
+      var instance = Popup.getInstance(topId);
+      if (instance.get('hideOnPressEscape')) {
+        instance.hide();
+      }
+    }
+  }
+});
+
+domUtil.bindEvent(window, 'resize', function() {
+  for (var id in instances) {
+    if (instances.hasOwnProperty(id)) {
+      var instance = Popup.getInstance(id);
+      if (instance.visible && instance.get('updatePositionOnResize')) {
+        instance.locate();
+      }
+    }
+  }
+});
+
+modalManager.doOnClick = function() {
+  var topId = modalManager.stack[modalManager.stack.length - 1].id;
+  var instance = Popup.getInstance(topId);
+  if (instance.get('hideOnClickModal')) {
+    instance.hide();
+  }
+};
 
 module.exports = Popup;
 },{"./animation":2,"./dom-util":3,"./modal-manager":4,"./transition":7}],7:[function(require,module,exports){

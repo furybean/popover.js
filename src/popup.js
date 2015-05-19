@@ -30,10 +30,32 @@ var Popup = function (options) {
 
   //inside use only
   this.$id = '$popup_' + seed++;
+
+  Popup.register(this.$id, this);
+
   this.shouldRefreshOnVisible = false;
   this.visible = false;
   this.showTimer = null;
   this.hideTimer = null;
+};
+
+var instances = {};
+
+Popup.getInstance = function(id) {
+  return instances[id];
+};
+
+Popup.register = function(id, instance) {
+  if (id && instance) {
+    instances[id] = instance;
+  }
+};
+
+Popup.unregister = function(id) {
+  if (id) {
+    instances[id] = null;
+    delete instances[id];
+  }
 };
 
 var getExtendFn = function(parentClass) {
@@ -119,9 +141,14 @@ Popup.prototype = {
     modal: false,
     zIndex: null,
 
+    hideOnPressEscape: false,
+    hideOnClickModal: false,
+
     viewport: 'window',
-    updatePositionOnResize: false,
-    updatePositionOnScroll: false
+    updatePositionOnResize: false
+
+    // Not Implement:
+    //updatePositionOnScroll: false
   },
   set: function(prop, value) {
     if (prop !== null && typeof prop === 'object') {
@@ -157,6 +184,8 @@ Popup.prototype = {
     }
     this.dom = null;
     this.options = null;
+    Popup.unregister(this.$id);
+    this.$id = null;
   },
   locate: function() {
     var popup = this;
@@ -450,5 +479,36 @@ Popup.prototype = {
 };
 
 Popup.prototype.constructor = Popup;
+
+domUtil.bindEvent(window, 'keydown', function(event) {
+  if (event.keyCode === 27) { // ESC
+    if (modalManager.stack.length > 0) {
+      var topId = modalManager.stack[modalManager.stack.length - 1].id;
+      var instance = Popup.getInstance(topId);
+      if (instance.get('hideOnPressEscape')) {
+        instance.hide();
+      }
+    }
+  }
+});
+
+domUtil.bindEvent(window, 'resize', function() {
+  for (var id in instances) {
+    if (instances.hasOwnProperty(id)) {
+      var instance = Popup.getInstance(id);
+      if (instance.visible && instance.get('updatePositionOnResize')) {
+        instance.locate();
+      }
+    }
+  }
+});
+
+modalManager.doOnClick = function() {
+  var topId = modalManager.stack[modalManager.stack.length - 1].id;
+  var instance = Popup.getInstance(topId);
+  if (instance.get('hideOnClickModal')) {
+    instance.hide();
+  }
+};
 
 module.exports = Popup;

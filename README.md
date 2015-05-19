@@ -56,6 +56,9 @@ popover.js的定位是一个Library，不能直接使用，用来开发自己的
 - hideAnimation: hide的时候使用的动画，默认值和animation相同。
 - modal: 是否显示模态层，默认值为false。
 - zIndex: 在modal为false的时候该属性才起作用，该属性为dom的style.zIndex的值，默认值为null，即不设置dom的zIndex。
+- hideOnPressEscape: 是否在按了Esc之后关闭Popup，在modal为true的时候该属性才起作用，默认值为false。
+- hideOnClickModal: 是否在点击了Modal层之后关闭Popup，在modal为true的时候该属性才起作用，默认值为false。
+- updatePositionOnResize：是否在window resize之后重新进行定位，默认值为false。
 
 以下属性只有Popover可以使用：
 - trigger: Popover的触发方法，只有在target定义之后才起作用，可选值mouseenter、click、focus，默认值mouseenter。

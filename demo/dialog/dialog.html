@@ -28,7 +28,10 @@
       alignment: 'start',
       adjustLeft: -20,
       detachAfterHide: false,
-      animation: 'pop'
+      animation: 'pop',
+      updatePositionOnResize: true,
+      hideOnPressEscape: true,
+      hideOnClickModal: true
     });
 
     dialog2 = new Dialog({
@@ -40,7 +43,9 @@
     dialog3 = new Dialog({
       target: "center",
       detachAfterHide: false,
-      animation: 'pop'
+      updatePositionOnResize: true,
+      animation: 'pop',
+      hideOnClickModal: true
     });
 
     btn1.onclick = function() {
