@@ -277,7 +277,7 @@ Popup.prototype = {
       }
 
       afterLocateArgs = {
-        placement: finalAlignment,
+        placement: finalPlacement,
         alignment: finalAlignment,
         isOutside: outside !== 'none'
       };

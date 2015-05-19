@@ -700,8 +700,10 @@ Popup.prototype = {
     hideOnClickModal: false,
 
     viewport: 'window',
-    updatePositionOnResize: false,
-    updatePositionOnScroll: false
+    updatePositionOnResize: false
+
+    // Not Implement:
+    //updatePositionOnScroll: false
   },
   set: function(prop, value) {
     if (prop !== null && typeof prop === 'object') {
@@ -830,7 +832,7 @@ Popup.prototype = {
       }
 
       afterLocateArgs = {
-        placement: finalAlignment,
+        placement: finalPlacement,
         alignment: finalAlignment,
         isOutside: outside !== 'none'
       };
