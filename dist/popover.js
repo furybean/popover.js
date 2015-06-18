@@ -18,11 +18,11 @@ if (typeof define === 'function' && define.amd) { // For AMD
   }).factory(POPOVER_NAME, function() {
     return Popover;
   });
-} else {
-  Number(document.documentMode) < 9 && window.execScript('var ' + POPUP_NAME + ',' + POPOVER_NAME + ';');
-  window[POPUP_NAME] = Popup;
-  window[POPOVER_NAME] = Popover;
 }
+Number(document.documentMode) < 9 && window.execScript('var ' + POPUP_NAME + ',' + POPOVER_NAME + ';');
+window[POPUP_NAME] = Popup;
+window[POPOVER_NAME] = Popover;
+
 },{"./popover":5,"./popup":6}],2:[function(require,module,exports){
 var domUtil = require('./dom-util');
 var transition = require('./transition');
