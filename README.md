@@ -16,17 +16,17 @@ popover.js的定位是一个Library，不能直接使用，用来开发自己的
         var dom = document.createElement('div');
         dom.className = 'dialog';
         dom.innerHTML = '<p>hello world</p>';
-        
+
         var btn = document.createElement('button');
         btn.innerHTML = 'hide';
-        
+
         var self = this;
         btn.addEventListener('click', function() {
           self.hide();
         });
-    
+
         dom.appendChild(btn);
-    
+
         return dom;
       }
     });
@@ -59,6 +59,7 @@ popover.js的定位是一个Library，不能直接使用，用来开发自己的
 - hideOnPressEscape: 是否在按了Esc之后关闭Popup，在modal为true的时候该属性才起作用，默认值为false。
 - hideOnClickModal: 是否在点击了Modal层之后关闭Popup，在modal为true的时候该属性才起作用，默认值为false。
 - updatePositionOnResize：是否在window resize之后重新进行定位，默认值为false。
+- hideBodyScroll：是否隐藏页面滚动条（避免出现页面上两个滚动条），默认值为false。
 
 以下属性只有Popover可以使用：
 - trigger: Popover的触发方法，只有在target定义之后才起作用，可选值mouseenter、click、focus，默认值mouseenter。
