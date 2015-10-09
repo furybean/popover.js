@@ -145,7 +145,9 @@ Popup.prototype = {
     hideOnClickModal: false,
 
     viewport: 'window',
-    updatePositionOnResize: false
+    updatePositionOnResize: false,
+
+    hideBodyScroll: false,
 
     // Not Implement:
     //updatePositionOnScroll: false
@@ -406,6 +408,10 @@ Popup.prototype = {
       }
     }
 
+    if (this.get('hideBodyScroll')) {
+      document.body.style.overflow = 'hidden';
+    }
+
     dom.style.visibility = '';
   },
   willHide: function() {
@@ -474,6 +480,10 @@ Popup.prototype = {
 
     if (this.get('detachAfterHide')) {
       dom.parentNode && dom.parentNode.removeChild(dom);
+    }
+
+    if (this.get('hideBodyScroll')) {
+      document.body.style.overflow = '';
     }
   }
 };
